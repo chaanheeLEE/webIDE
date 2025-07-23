@@ -1,0 +1,144 @@
+package first.webide.service;
+
+import first.webide.domain.FileNode;
+import first.webide.domain.FileType;
+import first.webide.repository.FileRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class FileService {
+
+    private final FileRepository  fileRepository;
+
+    private FileNode getFileByPath(String path) {
+        return fileRepository.findByPath(path)
+                .orElseThrow(() -> new IllegalArgumentException
+                        ("File not found! path = " + path));
+    }
+
+    private FileNode isDirectory(FileNode fileNode) {
+        if (!fileNode.isDirectory()) {
+            throw new IllegalArgumentException
+                ("Not a directory! path = " + fileNode.getPath());
+        }
+        return fileNode;
+    }
+    private FileNode isFile(FileNode fileNode) {
+        if (!fileNode.isFile()) {
+            throw new IllegalArgumentException
+                ("Not a file! path = " + fileNode.getPath());
+        }
+        return fileNode;
+    }
+
+
+    /**
+     * Create
+     */
+    // 루트 디렉토리 생성
+    @Transactional
+    public FileNode createRootDirectory(String name) {
+        String rootPath = "/" + name;
+
+        if (fileRepository.findByPath(rootPath).isPresent()) {
+            throw new IllegalArgumentException
+                  ("File already exists! path = " + rootPath);
+        }
+
+        FileNode root = FileNode.createRootDirectory(name);
+        return fileRepository.save(root);
+    }
+
+    // 하위 디렉토리 생성
+    @Transactional
+    public FileNode createDirectory(String parentPath, String name) {
+        FileNode parent = isDirectory(getFileByPath(parentPath));
+
+        if (fileRepository.existsByParentAndName(parent, name)) {
+            throw new IllegalArgumentException
+                  ("File already exists! path = " + parentPath);
+        }
+
+        FileNode dir = FileNode.create(parent, name, FileType.DIRECTORY, null);
+        return fileRepository.save(dir);
+    }
+
+    // 하위 파일 생성
+    @Transactional
+    public FileNode createFile(String parentPath, String name, String content) {
+        FileNode parent = isDirectory(getFileByPath(parentPath));
+
+        if (fileRepository.existsByParentAndName(parent, name)) {
+            throw new IllegalArgumentException
+                  ("File already exists! path = " + parentPath);
+        }
+
+        FileNode file = FileNode.create(parent, name, FileType.FILE, content);
+        return fileRepository.save(file);
+    }
+
+
+    /**
+     *  Read
+     */
+    // 루트 디렉터리 조회
+    public List<FileNode> getRootDirectories() {
+        return fileRepository.findByParentIsNullOrderByName();
+    }
+
+    // 디렉토리 자식 조회
+    public List<FileNode> getChildren(String parentPath) {
+        FileNode parent = isDirectory(getFileByPath(parentPath));
+        return fileRepository.findByParentOrderByTypeDescNameAsc(parent);
+    }
+
+    // 파일 내용 조회
+    public String getContent(String path) {
+        FileNode file = isFile(getFileByPath(path));
+        return file.getContent();
+    }
+
+
+    /**
+     *  Update
+     */
+    // 파일 내용 업데이트
+    @Transactional
+    public FileNode updateContent(String path, String content) {
+        FileNode file = isFile(getFileByPath(path));
+        file.updateContent(content);
+        return fileRepository.save(file);
+    }
+
+    // 파일노드 이름 변경
+    @Transactional
+    public FileNode rename(String path, String name) {
+        FileNode node = getFileByPath(path);
+        FileNode parent = node.getParent();
+
+        if (parent != null && fileRepository.existsByParentAndName(parent, name)) {
+            throw new IllegalArgumentException(
+                    " File already exists! path = " + path);
+        }
+
+        node.rename(name);
+        return fileRepository.save(node);
+    }
+
+
+    /**
+     * Delete
+     */
+    // 파일노드 삭제
+    @Transactional
+    public void delete(String path) {
+        FileNode node = getFileByPath(path);
+        fileRepository.delete(node);
+    }
+}
