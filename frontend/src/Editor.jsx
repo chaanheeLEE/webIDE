@@ -3,6 +3,8 @@ import CodeMirror from "@uiw/react-codemirror";
 import { basicSetup } from "@uiw/codemirror-extensions-basic-setup";
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "./languages";
 
+const basic = basicSetup();
+
 function Editor({ value, setValue }) {
   const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
 
@@ -14,7 +16,7 @@ function Editor({ value, setValue }) {
   const languageConfig = SUPPORTED_LANGUAGES[language];
   const extension = languageConfig.ext;
   const extensions = [
-    basicSetup(), 
+    basic, 
     typeof extension === 'function' ? extension() : extension,
   ];
 
