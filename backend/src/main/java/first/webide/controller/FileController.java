@@ -4,6 +4,10 @@ import first.webide.domain.FileNode;
 import first.webide.dto.request.FileNode.*;
 import first.webide.dto.response.FileNodeResponse;
 import first.webide.service.FileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
+@Tag(name = "File API", description = "파일 및 디렉토리 관리 API")
 public class FileController {
     private final FileService fileService;
 
@@ -22,6 +27,8 @@ public class FileController {
      * Create
      */
 
+    @Operation(summary = "루트 디렉토리 생성")
+    @ApiResponse(responseCode = "201", description = "생성 완료")
     @PostMapping("/root")
     public ResponseEntity<FileNodeResponse> createRootDirectory(
             @Valid @RequestBody CreateRootDirectoryRequest request) {
@@ -30,6 +37,7 @@ public class FileController {
                 .body(FileNodeResponse.from(rootDir));
     }
 
+    @Operation(summary = "하위 디렉토리 생성")
     @PostMapping("/directories")
     public ResponseEntity<FileNodeResponse> createDirectory(
             @Valid @RequestBody CreateDirectoryRequest request) {
@@ -39,6 +47,7 @@ public class FileController {
                 .body(FileNodeResponse.from(dir));
     }
 
+    @Operation(summary = "파일 생성")
     @PostMapping
     public ResponseEntity<FileNodeResponse> createFile(
             @Valid @RequestBody CreateFileRequest request){
@@ -51,6 +60,7 @@ public class FileController {
     /**
      * Read
      */
+    @Operation(summary = "루트 디렉토리 조회")
     @GetMapping("/root")
     public ResponseEntity<FileNodeResponse> getRootDirectory(){
         FileNode root = fileService.getRootDirectory();
@@ -59,6 +69,8 @@ public class FileController {
     }
 
     // GET /api/files/children?path=/project/src
+    @Operation(summary = "디렉토리의 자식 노드 조회")
+    @Parameter(name = "path", description = "부모 디렉토리의 경로", required = true)
     @GetMapping("/children")
     public ResponseEntity<List<FileNodeResponse>> getChildren(
             @RequestParam String path){
@@ -68,7 +80,10 @@ public class FileController {
 
         return ResponseEntity.ok(responses);
     }
+
     // GET /api/files/content?path=/project/src/main.java
+    @Operation(summary = "파일 내용 조회")
+    @Parameter(name = "path", description = "파일 경로", required = true)
     @GetMapping("/content")
     public ResponseEntity<String> getContent(@RequestParam String path){
         String content = fileService.getContent(path);
@@ -78,6 +93,7 @@ public class FileController {
     /**
      * Update
      */
+    @Operation(summary = "파일 내용 수정")
     @PatchMapping("/content")
     public ResponseEntity<FileNodeResponse> updateContent(
             @RequestParam String path,
@@ -86,6 +102,7 @@ public class FileController {
         return ResponseEntity.ok(FileNodeResponse.from(file));
     }
 
+    @Operation(summary = "파일 또는 디렉토리 이름 변경")
     @PatchMapping("/rename")
     public ResponseEntity<FileNodeResponse> rename(
             @RequestParam String path,
@@ -97,6 +114,8 @@ public class FileController {
     /**
      * Delete
      */
+    @Operation(summary = "파일 또는 디렉토리 삭제")
+    @Parameter(name = "path", description = "삭제할 노드의 경로", required = true)
     @DeleteMapping
     public ResponseEntity<Void> delete(@RequestParam String path) {
         fileService.delete(path);
