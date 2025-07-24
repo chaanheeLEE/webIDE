@@ -88,8 +88,10 @@ public class FileService {
      *  Read
      */
     // 루트 디렉터리 조회
-    public List<FileNode> getRootDirectories() {
-        return fileRepository.findByParentIsNullOrderByName();
+    public FileNode getRootDirectory() {
+        return fileRepository.findByParentIsNull()
+                .orElseThrow(()->
+                        new IllegalArgumentException("Root not exist!"));
     }
 
     // 디렉토리 자식 조회

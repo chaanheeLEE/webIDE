@@ -13,7 +13,7 @@ public interface FileRepository extends JpaRepository<FileNode,Long> {
     Optional<FileNode> findByPath(String path);
 
     List<FileNode> findByParentOrderByTypeDescNameAsc(FileNode parent);
-    List<FileNode> findByParentIsNullOrderByName();
+    Optional<FileNode> findByParentIsNull();
 
     boolean existsByParentAndName(FileNode parent, String name);
 
