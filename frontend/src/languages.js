@@ -14,52 +14,62 @@ export const SUPPORTED_LANGUAGES = {
   cpp: { 
     label: "C++", 
     ext: cpp,
-    fileExtensions: ['.cpp', '.cc', '.cxx']
+    fileExtensions: ['.cpp', '.cc', '.cxx'],
+    isRunnable: true
   },
   css: { 
     label: "CSS", 
     ext: css,
-    fileExtensions: ['.css']
+    fileExtensions: ['.css'],
+    isRunnable: false
   },
   html: { 
     label: "HTML", 
     ext: html,
-    fileExtensions: ['.html', '.htm']
+    fileExtensions: ['.html', '.htm'],
+    isRunnable: false
   },
   java: { 
     label: "Java", 
     ext: java,
-    fileExtensions: ['.java']
+    fileExtensions: ['.java'],
+    isRunnable: true
   },
   javascript: { 
     label: "JavaScript", 
     ext: () => javascript({ jsx: true }),
-    fileExtensions: ['.js', '.jsx', '.mjs']
+    fileExtensions: ['.js', '.jsx', '.mjs'],
+    isRunnable: true
   },
   json: { 
     label: "JSON", 
     ext: json,
-    fileExtensions: ['.json']
+    fileExtensions: ['.json'],
+    isRunnable: false
   },
   markdown: { 
     label: "Markdown", 
     ext: markdown,
-    fileExtensions: ['.md', '.markdown']
+    fileExtensions: ['.md', '.markdown'],
+    isRunnable: false
   },
   python: { 
     label: "Python", 
     ext: python,
-    fileExtensions: ['.py', '.pyw']
+    fileExtensions: ['.py', '.pyw'],
+    isRunnable: true
   },
   sql: { 
     label: "SQL", 
     ext: sql,
-    fileExtensions: ['.sql']
+    fileExtensions: ['.sql'],
+    isRunnable: false
   },
   yaml: { 
     label: "YAML", 
     ext: yaml,
-    fileExtensions: ['.yaml', '.yml']
+    fileExtensions: ['.yaml', '.yml'],
+    isRunnable: false
   }
 };
 

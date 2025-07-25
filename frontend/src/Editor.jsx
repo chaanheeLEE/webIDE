@@ -6,7 +6,7 @@ import HELLO_WORLD_SNIPPETS from "./helloWorldSnippets";
 
 const basic = basicSetup();
 
-function Editor({ value, setValue, onRun, filename, setFilename, language, setLanguage, isLoading }) {
+function Editor({ value, setValue, onRun, filename, setFilename, language, setLanguage, isLoading, input, setInput, args, setArgs }) {
   // 상태 useState 제거
 
   // 확장자에 따라 언어 자동 변경
@@ -39,6 +39,7 @@ function Editor({ value, setValue, onRun, filename, setFilename, language, setLa
     basic, 
     typeof extension === 'function' ? extension() : extension,
   ];
+  const isRunnable = languageConfig.isRunnable;
 
   return (
     <div>
@@ -52,7 +53,22 @@ function Editor({ value, setValue, onRun, filename, setFilename, language, setLa
           </option>
         ))}
       </select>
-      <button onClick={() => onRun && onRun(value)} disabled={isLoading} style={{ marginLeft: 8, padding: '4px 12px' }}>
+      {/* 버전 입력란 제거됨 */}
+      <input
+        type="text"
+        placeholder='args (예: ["input.txt"])'
+        value={args}
+        onChange={e => setArgs(e.target.value)}
+        style={{ marginLeft: 8, width: 180 }}
+      />
+      <input
+        type="text"
+        placeholder="표준 입력 (input)"
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        style={{ marginLeft: 8, width: 180 }}
+      />
+      <button onClick={() => onRun && onRun(value)} disabled={isLoading || !isRunnable} style={{ marginLeft: 8, padding: '4px 12px' }}>
         {isLoading ? '실행중...' : '실행'}
       </button>
       <CodeMirror
