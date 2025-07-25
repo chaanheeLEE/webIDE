@@ -5,10 +5,8 @@ import first.webide.dto.request.CodeExecuteRequest;
 import first.webide.dto.request.PistonRequest;
 import first.webide.dto.response.CodeExecuteResponse;
 import first.webide.dto.response.PistonResponse;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
