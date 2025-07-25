@@ -30,6 +30,20 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
 	implementation 'org.apache.commons:commons-lang3:3.18.0'
+
+	// GraalVM Core 의존성
+	implementation 'org.graalvm.sdk:graal-sdk:23.1.0'
+	implementation 'org.graalvm.polyglot:polyglot:23.1.0'
+
+	// JavaScript 지원
+	implementation 'org.graalvm.polyglot:js:23.1.0'
+	implementation 'org.graalvm.js:js-language:23.1.0'
+
+	// Python 지원 (추가됨)
+	implementation 'org.graalvm.python:python-language:23.1.0'
+	implementation 'org.graalvm.python:python-resources:23.1.0'
+	implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
