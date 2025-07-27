@@ -94,10 +94,12 @@ public class FileNode {
 
     // 파일 이름 수정
     public void rename(String newName) {
+        validateName(newName);
         String oldPath = this.path;
         this.name = newName;
 
         String newPath = this.parent != null ? buildPath(this.parent.path, newName) : "/" + newName;
+        this.path = newPath;
 
         if (isDirectory()){
             updateChildrenPath(oldPath, newPath);
