@@ -97,7 +97,7 @@ public class FileService {
     // 디렉토리 자식 조회
     public List<FileNode> getChildren(String parentPath) {
         FileNode parent = isDirectory(getFileByPath(parentPath));
-        return fileRepository.findByParentOrderByTypeDescNameAsc(parent);
+        return fileRepository.findByParentOrderByTypeAscNameAsc(parent);
     }
 
     // 파일 내용 조회
@@ -141,6 +141,12 @@ public class FileService {
     @Transactional
     public void delete(String path) {
         FileNode node = getFileByPath(path);
+
+        // 부모 노드가 있다면, 부모의 자식 리스트에서 자신을 제거하여 관계를 명확히 끊음
+        if (node.getParent() != null) {
+            node.getParent().getChildren().remove(node);
+        }
+
         fileRepository.delete(node);
     }
 }

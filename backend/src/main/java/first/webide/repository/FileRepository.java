@@ -13,7 +13,7 @@ public interface FileRepository extends JpaRepository<FileNode,Long> {
 
     Optional<FileNode> findByPath(String path);
 
-    List<FileNode> findByParentOrderByTypeDescNameAsc(FileNode parent);
+    List<FileNode> findByParentOrderByTypeAscNameAsc(FileNode parent);
 
     @Query("select distinct f from FileNode f left join fetch f.children where f.parent is null")
     Optional<FileNode> findByParentIsNull();
