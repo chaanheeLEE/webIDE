@@ -5,11 +5,14 @@ import first.webide.dto.request.CodeExecuteRequest;
 import first.webide.dto.request.PistonRequest;
 import first.webide.dto.response.CodeExecuteResponse;
 import first.webide.dto.response.PistonResponse;
+import first.webide.exception.BusinessException;
+import first.webide.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static first.webide.dto.request.PistonRequest.*;
 
@@ -19,18 +22,26 @@ import static first.webide.dto.request.PistonRequest.*;
 public class CodeExecuteServiceImpl implements CodeExecuteService {
 
     private final PistonApiClient pistonApiClient;
+    private static final Set<String> SUPPORTED_LANGUAGES = Set.of("java", "python", "javascript", "c", "cpp");
+
 
     public CodeExecuteResponse execute(CodeExecuteRequest request) {
+        if (!SUPPORTED_LANGUAGES.contains(request.getLanguage().toLowerCase())) {
+            throw new BusinessException(ErrorCode.UNSUPPORTED_LANGUAGE);
+        }
         long startTime = System.currentTimeMillis();
 
         try {
             // 파일 이름 지정
             List<FileEntry> files = getFiles(request);
 
-            // Request 변환 -> 빌더패턴으로 리팩토링
-            PistonRequest pistonRequest = new PistonRequest(
-                    request.getLanguage(), files, request.getArgs(),
-                    request.getInput(), request.getVersion());
+            PistonRequest pistonRequest = PistonRequest.builder()
+                    .language(request.getLanguage())
+                    .files(files)
+                    .args(request.getArgs())
+                    .stdin(request.getInput())
+                    .version(request.getVersion())
+                    .build();
 
             PistonResponse response = pistonApiClient.executeCode(pistonRequest);
 
@@ -59,8 +70,10 @@ public class CodeExecuteServiceImpl implements CodeExecuteService {
         String filename = request.getFilename();
         if (filename == null || filename.isBlank()) {
             filename = getDefaultFileName(request.getLanguage());
-        }
-        FileEntry fileEntry = new FileEntry(filename, request.getCode());
+        }// (filename, request.getCode())
+        FileEntry fileEntry = FileEntry.builder()
+                .name(filename)
+                .content(request.getCode()).build();
         List<FileEntry> files = Collections.singletonList(fileEntry);
         return files;
     }
