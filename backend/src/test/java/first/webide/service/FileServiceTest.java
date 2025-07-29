@@ -2,6 +2,8 @@ package first.webide.service;
 
 import first.webide.domain.FileNode;
 import first.webide.domain.FileType;
+import first.webide.exception.BusinessException;
+import first.webide.exception.ErrorCode;
 import first.webide.repository.FileRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,9 +58,10 @@ class FileServiceTest {
         // Given in setUp()
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             fileService.createRootDirectory("testRoot");
         });
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FILE_ALREADY_EXISTS);
     }
 
     @Test
@@ -133,6 +136,19 @@ class FileServiceTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 파일 내용 조회 시 예외 발생")
+    void getContent_Fail_NotFound() {
+        // Given
+        String nonExistentPath = "/testRoot/nonexistent.txt";
+
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            fileService.getContent(nonExistentPath);
+        });
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FILE_NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("파일 내용 업데이트 성공")
     void updateContent_Success() {
         // Given
@@ -192,5 +208,18 @@ class FileServiceTest {
         assertThat(fileRepository.findByPath(dirPath)).isEmpty();
         // 부모 디렉토리 삭제 시 자식 파일도 함께 삭제되는지 확인 (Cascade)
         assertThat(fileRepository.findByPath(filePath)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 파일 삭제 시 예외 발생")
+    void delete_Fail_NotFound() {
+        // Given
+        String nonExistentPath = "/testRoot/nonexistent.txt";
+
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            fileService.delete(nonExistentPath);
+        });
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.FILE_NOT_FOUND);
     }
 }
