@@ -2,13 +2,12 @@ package first.webide.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "코드 실행 요청 DTO")
@@ -32,6 +31,7 @@ public class PistonRequest {
 
 
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FileEntry {

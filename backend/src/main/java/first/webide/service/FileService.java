@@ -2,6 +2,8 @@ package first.webide.service;
 
 import first.webide.domain.FileNode;
 import first.webide.domain.FileType;
+import first.webide.exception.BusinessException;
+import first.webide.exception.ErrorCode;
 import first.webide.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,21 +20,18 @@ public class FileService {
 
     private FileNode getFileByPath(String path) {
         return fileRepository.findByPath(path)
-                .orElseThrow(() -> new IllegalArgumentException
-                        ("File not found! path = " + path));
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
     }
 
     private FileNode isDirectory(FileNode fileNode) {
         if (!fileNode.isDirectory()) {
-            throw new IllegalArgumentException
-                ("Not a directory! path = " + fileNode.getPath());
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
         return fileNode;
     }
     private FileNode isFile(FileNode fileNode) {
         if (!fileNode.isFile()) {
-            throw new IllegalArgumentException
-                ("Not a file! path = " + fileNode.getPath());
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
         return fileNode;
     }
@@ -47,8 +46,7 @@ public class FileService {
         String rootPath = "/" + name;
 
         if (fileRepository.findByPath(rootPath).isPresent()) {
-            throw new IllegalArgumentException
-                  ("File already exists! path = " + rootPath);
+            throw new BusinessException(ErrorCode.FILE_ALREADY_EXISTS);
         }
 
         FileNode root = FileNode.createRootDirectory(name);
@@ -61,8 +59,7 @@ public class FileService {
         FileNode parent = isDirectory(getFileByPath(parentPath));
 
         if (fileRepository.existsByParentAndName(parent, name)) {
-            throw new IllegalArgumentException
-                  ("File already exists! path = " + parentPath);
+            throw new BusinessException(ErrorCode.FILE_ALREADY_EXISTS);
         }
 
         FileNode dir = FileNode.create(parent, name, FileType.DIRECTORY, null);
@@ -75,8 +72,7 @@ public class FileService {
         FileNode parent = isDirectory(getFileByPath(parentPath));
 
         if (fileRepository.existsByParentAndName(parent, name)) {
-            throw new IllegalArgumentException
-                  ("File already exists! path = " + parentPath);
+            throw new BusinessException(ErrorCode.FILE_ALREADY_EXISTS);
         }
 
         FileNode file = FileNode.create(parent, name, FileType.FILE, content);
@@ -90,14 +86,13 @@ public class FileService {
     // 루트 디렉터리 조회
     public FileNode getRootDirectory() {
         return fileRepository.findByParentIsNull()
-                .orElseThrow(()->
-                        new IllegalArgumentException("Root not exist!"));
+                .orElseThrow(()-> new BusinessException(ErrorCode.FILE_NOT_FOUND));
     }
 
     // 디렉토리 자식 조회
     public List<FileNode> getChildren(String parentPath) {
         FileNode parent = isDirectory(getFileByPath(parentPath));
-        return fileRepository.findByParentOrderByTypeDescNameAsc(parent);
+        return fileRepository.findByParentOrderByTypeAscNameAsc(parent);
     }
 
     // 파일 내용 조회
@@ -125,8 +120,7 @@ public class FileService {
         FileNode parent = node.getParent();
 
         if (parent != null && fileRepository.existsByParentAndName(parent, name)) {
-            throw new IllegalArgumentException(
-                    " File already exists! path = " + path);
+            throw new BusinessException(ErrorCode.FILE_ALREADY_EXISTS);
         }
 
         node.rename(name);
@@ -141,6 +135,12 @@ public class FileService {
     @Transactional
     public void delete(String path) {
         FileNode node = getFileByPath(path);
+
+        // 부모 노드가 있다면, 부모의 자식 리스트에서 자신을 제거하여 관계를 명확히 끊음
+        if (node.getParent() != null) {
+            node.getParent().getChildren().remove(node);
+        }
+
         fileRepository.delete(node);
     }
 }

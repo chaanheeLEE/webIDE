@@ -1,86 +1,61 @@
-import React, { useState } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { basicSetup } from "@uiw/codemirror-extensions-basic-setup";
-import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from "./languages";
-import HELLO_WORLD_SNIPPETS from "./helloWorldSnippets";
+import React, { useState, useEffect } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { oneDark } from '@codemirror/theme-one-dark';
 
-const basic = basicSetup();
+// Statically import JavaScript since it's a common default
+import { javascript } from '@codemirror/lang-javascript';
 
-function Editor({ value, setValue, onRun, filename, setFilename, language, setLanguage, isLoading, input, setInput, args, setArgs }) {
-  // 상태 useState 제거
+const languageMap = {
+  cpp: () => import('@codemirror/lang-cpp'),
+  css: () => import('@codemirror/lang-css'),
+  html: () => import('@codemirror/lang-html'),
+  java: () => import('@codemirror/lang-java'),
+  javascript: () => Promise.resolve({ javascript: () => javascript({ jsx: true }) }),
+  jsx: () => Promise.resolve({ javascript: () => javascript({ jsx: true }) }),
+  json: () => import('@codemirror/lang-json'),
+  md: () => import('@codemirror/lang-markdown'),
+  python: () => import('@codemirror/lang-python'),
+  sql: () => import('@codemirror/lang-sql'),
+  yaml: () => import('@codemirror/lang-yaml'),
+  yml: () => import('@codemirror/lang-yaml'),
+};
 
-  // 확장자에 따라 언어 자동 변경
-  const handleFilenameChange = (e) => {
-    const newFilename = e.target.value;
-    setFilename(newFilename);
-    const extMatch = newFilename.match(/\.[^.]+$/);
-    if (extMatch) {
-      const ext = extMatch[0].toLowerCase();
-      const found = Object.entries(SUPPORTED_LANGUAGES).find(([, config]) =>
-        config.fileExtensions.includes(ext)
-      );
-      if (found) {
-        setLanguage(found[0]);
+const Editor = ({ activeFile, onChange }) => {
+  const [extensions, setExtensions] = useState([javascript({ jsx: true })]);
+
+  useEffect(() => {
+    if (activeFile?.name) {
+      const extension = activeFile.name.split('.').pop();
+      const langLoader = languageMap[extension];
+
+      if (langLoader) {
+        langLoader().then(langModule => {
+          const langExtension = Object.values(langModule)[0]();
+          setExtensions([langExtension]);
+        }).catch(err => {
+          console.error(`Failed to load language for extension: ${extension}`, err);
+          // Fallback to javascript
+          setExtensions([javascript({ jsx: true })]);
+        });
+      } else {
+        // Fallback for unknown extensions
+        setExtensions([javascript({ jsx: true })]);
       }
     }
-  };
-
-  const handleLanguageChange = (e) => {
-    const selectedLanguage = e.target.value;
-    setLanguage(selectedLanguage);
-    if (HELLO_WORLD_SNIPPETS[selectedLanguage]) {
-      setValue(HELLO_WORLD_SNIPPETS[selectedLanguage]);
-    }
-  };
-
-  const languageConfig = SUPPORTED_LANGUAGES[language];
-  const extension = languageConfig.ext;
-  const extensions = [
-    basic, 
-    typeof extension === 'function' ? extension() : extension,
-  ];
-  const isRunnable = languageConfig.isRunnable;
+  }, [activeFile?.name]);
 
   return (
-    <div>
-      <div style={{ color: "#fff", marginBottom: 8 }}>
-        파일명: <span style={{ fontWeight: "bold" }}>{filename || "없음"}</span>
-      </div>
-      <select value={language} onChange={handleLanguageChange}>
-        {Object.entries(SUPPORTED_LANGUAGES).map(([key, config]) => (
-          <option key={key} value={key}>
-            {config.label}
-          </option>
-        ))}
-      </select>
-      {/* 버전 입력란 제거됨 */}
-      <input
-        type="text"
-        placeholder='args (예: ["input.txt"])'
-        value={args}
-        onChange={e => setArgs(e.target.value)}
-        style={{ marginLeft: 8, width: 180 }}
-      />
-      <input
-        type="text"
-        placeholder="표준 입력 (input)"
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        style={{ marginLeft: 8, width: 180 }}
-      />
-      <button onClick={() => onRun && onRun(value)} disabled={isLoading || !isRunnable} style={{ marginLeft: 8, padding: '4px 12px' }}>
-        {isLoading ? '실행중...' : '실행'}
-      </button>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CodeMirror
-        value={value}
-        height="500px"
-        width="800px"
+        value={activeFile?.content || 'Select a file to start editing.'}
+        height="100%"
         extensions={extensions}
-        onChange={setValue}
-        theme="dark"
-        style={{ fontSize: "16px", marginTop: 16 }}
+        onChange={onChange}
+        theme={oneDark}
+        style={{ flexGrow: 1, overflow: 'auto' }}
       />
     </div>
   );
-}
+};
+
 export default Editor;
