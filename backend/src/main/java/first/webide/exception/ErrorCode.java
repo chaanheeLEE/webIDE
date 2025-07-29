@@ -19,6 +19,9 @@ public enum ErrorCode {
     // File
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "File Not Found"),
     FILE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "F002", "File Already Exists"),
+
+    // Language
+    UNSUPPORTED_LANGUAGE(HttpStatus.BAD_REQUEST, "L001", "Unsupported Language"),
     ;
 
     private final HttpStatus status; // 상태코드

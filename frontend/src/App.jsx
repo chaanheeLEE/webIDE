@@ -406,8 +406,10 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'No error message'}`);
+        const errorData = await response.json().catch(() => ({ message: '서버에서 알 수 없는 에러가 발생했습니다.' }));
+        // BusinessException으로부터 오는 커스텀 에러 메시지 추출
+        const errorMessage = errorData.message || '에러 메시지가 없습니다.';
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -418,8 +420,10 @@ function App() {
         setOutput(`Error:\n${result.error}`);
       }
     } catch (error) {
-      console.error('Failed to execute code:', error);
-      setOutput(`Failed to connect to the execution service. Make sure the backend is running.\n${error.message}`);
+      // 사용자에게 에러 메시지를 알림으로 표시
+      alert(error.message);
+      // 콘솔 초기화
+      setOutput('');
     }
   };
 
