@@ -20,6 +20,12 @@ public enum ErrorCode {
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "File Not Found"),
     FILE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "F002", "File Already Exists"),
 
+    // Member
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "Member not found"),
+    LOGIN_ID_DUPLICATED(HttpStatus.CONFLICT, "M002", "Login Id is duplicated"),
+    USERNAME_DUPLICATED(HttpStatus.CONFLICT, "M003", "Username is duplicated"),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "Password is not valid"),
+
     // Language
     UNSUPPORTED_LANGUAGE(HttpStatus.BAD_REQUEST, "L001", "Unsupported Language"),
     ;
