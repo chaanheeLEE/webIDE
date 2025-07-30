@@ -22,9 +22,10 @@ public enum ErrorCode {
 
     // Member
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "Member not found"),
-    LOGIN_ID_DUPLICATED(HttpStatus.CONFLICT, "M002", "Login Id is duplicated"),
-    USERNAME_DUPLICATED(HttpStatus.CONFLICT, "M003", "Username is duplicated"),
-    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "Password is not valid"),
+    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "M002", "Email already exists"),
+    USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "M003", "Username already exists"),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "Invalid password"),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "M005", "Login failed"),
 
     // Language
     UNSUPPORTED_LANGUAGE(HttpStatus.BAD_REQUEST, "L001", "Unsupported Language"),

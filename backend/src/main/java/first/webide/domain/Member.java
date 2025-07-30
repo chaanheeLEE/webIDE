@@ -1,10 +1,13 @@
 package first.webide.domain;
 
+import first.webide.exception.BusinessException;
+import first.webide.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
@@ -15,10 +18,10 @@ public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true,  length = 15)
-    private String loginId;
+    @Column(nullable = false, unique = true, length = 50)
+    private String email;
 
-    @Column(nullable = false, length = 100) // password length increased for hashing
+    @Column(nullable = false, length = 100)
     private String password;
 
     @Column(nullable = false, unique = true,  length = 15)
@@ -30,22 +33,42 @@ public class Member {
     private LocalDateTime createdDate;
 
     @Builder
-    private Member(String loginId, String password, String username, MemberRole role) {
-        this.loginId = loginId;
+    private Member(String email, String password, String username, MemberRole role) {
+        this.email = email;
         this.password = password;
         this.username = username;
         this.role = role;
         this.createdDate = LocalDateTime.now();
     }
 
-    public static Member createNewMember(String loginId, String password, String username) {
+    public static Member createNewMember(String email, String rawPassword, String username, PasswordEncoder passwordEncoder) {
+        String encodedPassword = passwordEncoder.encode(rawPassword);
         return Member.builder()
-                .loginId(loginId)
-                .password(password)
+                .email(email)
+                .password(encodedPassword)
                 .username(username)
                 .role(MemberRole.USER)
                 .build();
     }
 
+    //== Business Logic ==//
+    public void verifyPassword(String rawPassword, PasswordEncoder passwordEncoder) {
+        if (!passwordEncoder.matches(rawPassword, this.password)) {
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+        }
+    }
 
+    public void changeUsername(String newUsername) {
+        this.username = newUsername;
+    }
+
+    public void changePassword(String newRawPassword, PasswordEncoder passwordEncoder) {
+        this.password = passwordEncoder.encode(newRawPassword);
+    }
+
+    public void withdraw(String rawPassword, PasswordEncoder passwordEncoder) {
+        if (!passwordEncoder.matches(rawPassword, this.password)) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+    }
 }

@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
-    @NotBlank(message = "이메일을 입력해주세요.")
-    private String email;
-
+public class DeleteMemberRequest {
     @NotBlank(message = "비밀번호를 입력해주세요.")
     private String password;
 }

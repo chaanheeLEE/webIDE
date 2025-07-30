@@ -9,12 +9,12 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class MemberResponse {
-    private String loginId;
+    private String email;
     private String username;
 
     public static MemberResponse from(Member member) {
         return MemberResponse.builder()
-                .loginId(member.getLoginId())
+                .email(member.getEmail())
                 .username(member.getUsername())
                 .build();
     }
