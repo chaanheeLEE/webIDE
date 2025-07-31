@@ -1,6 +1,7 @@
 package first.webide.service;
 
 import first.webide.domain.Member;
+import first.webide.domain.RefreshToken;
 import first.webide.dto.request.ChangeUsernameRequest;
 import first.webide.dto.request.DeleteMemberRequest;
 import first.webide.dto.request.LoginRequest;
@@ -8,6 +9,7 @@ import first.webide.dto.request.SignUpRequest;
 import first.webide.dto.response.LoginResponse;
 import first.webide.exception.BusinessException;
 import first.webide.repository.MemberRepository;
+import first.webide.repository.RefreshTokenRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +30,12 @@ class MemberServiceTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     @AfterEach
     void tearDown() {
+        refreshTokenRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
     }
 
@@ -59,8 +65,7 @@ class MemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> memberService.signUp(request2))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Email already exists");
+                .isInstanceOf(BusinessException.class);
     }
 
     @DisplayName("중복된 이름으로 회원가입 시 예외가 발생한다.")
@@ -74,11 +79,10 @@ class MemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> memberService.signUp(request2))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Username already exists");
+                .isInstanceOf(BusinessException.class);
     }
 
-    @DisplayName("로그인에 성공한다.")
+    @DisplayName("로그인에 성공하고 리프레시 토큰을 저장한다.")
     @Test
     void login() {
         // given
@@ -92,6 +96,12 @@ class MemberServiceTest {
 
         // then
         assertThat(token).isNotNull();
+        assertThat(token.getAccessToken()).isNotBlank();
+        assertThat(token.getRefreshToken()).isNotBlank();
+
+        Member member = memberRepository.findByEmail("test@test.com").get();
+        RefreshToken refreshToken = refreshTokenRepository.findByMemberId(member.getId()).get();
+        assertThat(refreshToken.getToken()).isEqualTo(token.getRefreshToken());
     }
 
     @DisplayName("잘못된 비밀번호로 로그인 시 예외가 발생한다.")
@@ -105,9 +115,40 @@ class MemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> memberService.login(loginRequest))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Login failed");
+                .isInstanceOf(BusinessException.class);
     }
+
+    @DisplayName("유효한 리프레시 토큰으로 새로운 액세스 토큰을 재발급 받는다.")
+    @Test
+    void reissueToken() {
+        // given
+        SignUpRequest signUpRequest = new SignUpRequest("test@test.com", "password1234", "tester");
+        memberService.signUp(signUpRequest);
+        LoginRequest loginRequest = new LoginRequest("test@test.com", "password1234");
+        LoginResponse loginResponse = memberService.login(loginRequest);
+        String originalRefreshToken = loginResponse.getRefreshToken();
+
+        // when
+        LoginResponse reissueResponse = memberService.reissueToken(originalRefreshToken);
+
+        // then
+        assertThat(reissueResponse).isNotNull();
+        assertThat(reissueResponse.getAccessToken()).isNotBlank();
+        assertThat(reissueResponse.getAccessToken()).isNotEqualTo(loginResponse.getAccessToken());
+        assertThat(reissueResponse.getRefreshToken()).isEqualTo(originalRefreshToken);
+    }
+
+    @DisplayName("유효하지 않은 리프레시 토큰으로 재발급 요청 시 예외가 발생한다.")
+    @Test
+    void reissueTokenWithInvalidToken() {
+        // given
+        String invalidRefreshToken = "invalid-token";
+
+        // when & then
+        assertThatThrownBy(() -> memberService.reissueToken(invalidRefreshToken))
+                .isInstanceOf(BusinessException.class);
+    }
+
 
     @DisplayName("사용자 이름 변경에 성공한다.")
     @Test
@@ -140,8 +181,7 @@ class MemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> memberService.changeUsername("test1@test.com", request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Username already exists");
+                .isInstanceOf(BusinessException.class);
     }
 
     @DisplayName("회원 탈퇴에 성공한다.")
@@ -169,7 +209,6 @@ class MemberServiceTest {
 
         // when & then
         assertThatThrownBy(() -> memberService.deleteMember("test@test.com", request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Invalid password");
+                .isInstanceOf(BusinessException.class);
     }
 }

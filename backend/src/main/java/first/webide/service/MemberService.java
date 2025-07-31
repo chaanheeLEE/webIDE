@@ -10,6 +10,7 @@ import first.webide.dto.response.MemberResponse;
 public interface MemberService {
     MemberResponse signUp(SignUpRequest request);
     LoginResponse login(LoginRequest request);
+    LoginResponse reissueToken(String refreshToken);
     MemberResponse changeUsername(String email, ChangeUsernameRequest request);
     void deleteMember(String email, DeleteMemberRequest request);
 }

@@ -26,6 +26,8 @@ public enum ErrorCode {
     USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "M003", "Username already exists"),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "M004", "Invalid password"),
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "M005", "Login failed"),
+    INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "M006", "Invalid refresh token"),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "M007", "Refresh token not found"),
 
     // Language
     UNSUPPORTED_LANGUAGE(HttpStatus.BAD_REQUEST, "L001", "Unsupported Language"),

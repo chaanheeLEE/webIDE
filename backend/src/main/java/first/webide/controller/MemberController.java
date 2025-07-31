@@ -52,6 +52,22 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 리프레시 토큰")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshToken(@RequestHeader("Authorization") String refreshToken) {
+        if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
+            refreshToken = refreshToken.substring(7);
+        }
+        LoginResponse response = memberService.reissueToken(refreshToken);
+        return ResponseEntity.ok(response);
+    }
+
+
+
 
 
     @Operation(summary = "사용자 이름 변경", description = "인증된 사용자의 이름을 변경합니다.")
