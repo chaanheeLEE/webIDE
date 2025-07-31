@@ -59,7 +59,7 @@ const getFileIcon = (fileName) => {
   }
 };
 
-const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode }) => {
+const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode, fileTree }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const isFolder = node.type === 'folder';
   const isExpanded = isFolder && expandedFolders.has(node.id);
@@ -83,20 +83,46 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
 
   // --- Drag and Drop Handlers ---
   const handleDragStart = (e) => {
-    if (node.type === 'file') { // Only allow files to be dragged for now
-      e.stopPropagation();
-      e.dataTransfer.setData('application/node-id', node.id);
-      e.dataTransfer.effectAllowed = 'move';
-    } else {
-      e.preventDefault(); // Prevent dragging folders
+    e.stopPropagation();
+    e.dataTransfer.setData('application/node-id', node.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const findNodeById = (nodes, id) => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      if (n.children) {
+        const found = findNodeById(n.children, id);
+        if (found) return found;
+      }
     }
+    return null;
+  };
+
+  const isDescendant = (sourceNode, targetNode) => {
+    if (!sourceNode || !targetNode) return false;
+    if (targetNode.id === sourceNode.id) return true;
+    if (targetNode.children) {
+      for (const child of targetNode.children) {
+        const newTarget = findNodeById(fileTree, child.id);
+        if (isDescendant(sourceNode, newTarget)) return true;
+      }
+    }
+    return false;
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (isFolder) {
-      setIsDragOver(true);
+      const sourceId = e.dataTransfer.getData('application/node-id');
+      const sourceNode = findNodeById(fileTree, sourceId);
+      const targetNode = node;
+
+      // Prevent dropping a folder into itself or one of its own children
+      if (sourceId && sourceId !== targetNode.id && sourceNode && !isDescendant(sourceNode, targetNode)) {
+        setIsDragOver(true);
+      }
     }
   };
 
@@ -112,8 +138,11 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
     setIsDragOver(false);
     if (isFolder) {
       const sourceId = e.dataTransfer.getData('application/node-id');
-      if (sourceId && sourceId !== node.id) {
-        onMoveNode(sourceId, node.id);
+      const sourceNode = findNodeById(fileTree, sourceId);
+      const targetNode = node;
+
+      if (sourceId && sourceId !== targetNode.id && sourceNode && !isDescendant(sourceNode, targetNode)) {
+        onMoveNode(sourceId, targetNode.id);
       }
     }
   };
@@ -127,7 +156,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
       <li
         className={`tree-node ${isSelected ? 'selected' : ''} ${isDragOver ? 'drag-over' : ''}`}
         onClick={handleNodeClick}
-        draggable={node.type === 'file'} // Only files are draggable
+        draggable={true}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -152,6 +181,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
               onFolderToggle={onFolderToggle}
               onDeleteNode={onDeleteNode}
               onMoveNode={onMoveNode}
+              fileTree={fileTree}
             />
           ))}
         </ul>
@@ -200,6 +230,7 @@ const FileExplorer = ({
               onFolderToggle={onFolderToggle}
               onDeleteNode={onDeleteNode}
               onMoveNode={onMoveNode}
+              fileTree={fileTree}
             />
           ))}
           {creatingNode && creatingNode.parentId === null && (

@@ -1,53 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { oneDark } from '@codemirror/theme-one-dark';
-
-// Statically import JavaScript since it's a common default
-import { javascript } from '@codemirror/lang-javascript';
-
-const languageMap = {
-  cpp: () => import('@codemirror/lang-cpp'),
-  css: () => import('@codemirror/lang-css'),
-  html: () => import('@codemirror/lang-html'),
-  java: () => import('@codemirror/lang-java'),
-  javascript: () => Promise.resolve({ javascript: () => javascript({ jsx: true }) }),
-  jsx: () => Promise.resolve({ javascript: () => javascript({ jsx: true }) }),
-  json: () => import('@codemirror/lang-json'),
-  md: () => import('@codemirror/lang-markdown'),
-  python: () => import('@codemirror/lang-python'),
-  sql: () => import('@codemirror/lang-sql'),
-  yaml: () => import('@codemirror/lang-yaml'),
-  yml: () => import('@codemirror/lang-yaml'),
-};
+import { getLanguageForFile, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from './languages';
 
 const Editor = ({ activeFile, onChange }) => {
-  const [extensions, setExtensions] = useState([javascript({ jsx: true })]);
+  const [extensions, setExtensions] = useState([]);
+  const defaultLang = SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+
+  // Load default language extension on initial mount
+  useEffect(() => {
+    defaultLang.loader().then(langExt => {
+      setExtensions([langExt]);
+    });
+  }, []);
 
   useEffect(() => {
-    if (activeFile?.name) {
-      const extension = activeFile.name.split('.').pop();
-      const langLoader = languageMap[extension];
-
-      if (langLoader) {
-        langLoader().then(langModule => {
-          const langExtension = Object.values(langModule)[0]();
-          setExtensions([langExtension]);
-        }).catch(err => {
-          console.error(`Failed to load language for extension: ${extension}`, err);
-          // Fallback to javascript
-          setExtensions([javascript({ jsx: true })]);
-        });
-      } else {
-        // Fallback for unknown extensions
-        setExtensions([javascript({ jsx: true })]);
+    const loadLanguage = async () => {
+      // Find language config based on file extension
+      const langConfig = getLanguageForFile(activeFile?.name);
+      
+      let langExtension;
+      try {
+        if (langConfig) {
+          // If a language is found, load its extension
+          langExtension = await langConfig.loader();
+        } else {
+          // Otherwise, fall back to the default language
+          langExtension = await defaultLang.loader();
+        }
+        setExtensions([langExtension]);
+      } catch (err) {
+        console.error(`Failed to load language for file: ${activeFile?.name}`, err);
+        // On error, fall back to the default language
+        const fallback = await defaultLang.loader();
+        setExtensions([fallback]);
       }
+    };
+
+    if (activeFile?.name) {
+      loadLanguage();
+    } else {
+      // If no file is active, ensure default language is set
+      defaultLang.loader().then(langExt => setExtensions([langExt]));
     }
   }, [activeFile?.name]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CodeMirror
-        value={activeFile?.content || 'Select a file to start editing.'}
+        value={activeFile?.content ?? 'Select a file to start editing.'}
         height="100%"
         extensions={extensions}
         onChange={onChange}

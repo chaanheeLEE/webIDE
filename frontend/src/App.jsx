@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useReducer } from 'react';
 import {
   Panel,
   PanelGroup,
@@ -10,9 +10,7 @@ import FileExplorer from './components/FileExplorer';
 import Editor from './Editor';
 import OutputConsole from './components/OutputConsole';
 import HELLO_WORLD_SNIPPETS from './helloWorldSnippets';
-
-// This will be replaced by data from the backend
-const initialFileTree = [];
+import { fileTreeReducer, initialState, actionTypes } from './fileTreeReducer';
 
 // Piston API supported language versions (example versions, might need updates)
 const languageVersions = {
@@ -30,11 +28,9 @@ const languageVersions = {
 };
 
 function App() {
-  const [fileTree, setFileTree] = useState(initialFileTree);
-  const [activeFile, setActiveFile] = useState(null);
+  const [state, dispatch] = useReducer(fileTreeReducer, initialState);
+  const { fileTree, activeFile, expandedFolders, creatingNode } = state;
   const [output, setOutput] = useState('');
-  const [expandedFolders, setExpandedFolders] = useState(new Set());
-  const [creatingNode, setCreatingNode] = useState(null); // { type: 'file' | 'folder', parentId: string | null }
 
   // Fetch initial file tree from backend
   useEffect(() => {
@@ -81,8 +77,8 @@ function App() {
           throw new Error('Failed to fetch file tree');
         }
         const rootNode = await response.json();
-        setFileTree([rootNode]);
-        setExpandedFolders(new Set([rootNode.id]));
+        dispatch({ type: actionTypes.SET_TREE, payload: [rootNode] });
+        dispatch({ type: actionTypes.SET_EXPANDED_FOLDERS, payload: new Set([rootNode.id]) });
       } catch (error) {
         console.error("Error fetching file tree:", error);
       }
@@ -94,31 +90,19 @@ function App() {
 
   const handleFileSelect = useCallback((file) => {
     if (file.type === 'file') {
-      setActiveFile(file);
+      dispatch({ type: actionTypes.SET_ACTIVE_FILE, payload: file });
     }
   }, []);
 
   const handleFolderToggle = useCallback((folderId) => {
-    setExpandedFolders(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(folderId)) {
-        newSet.delete(folderId);
-      } else {
-        newSet.add(folderId);
-      }
-      return newSet;
-    });
+    dispatch({ type: actionTypes.TOGGLE_FOLDER, payload: folderId });
   }, []);
 
   const handleInitiateCreation = (type) => {
     let parentId = null;
-
-    // Find parent from the currently active file's path
     if (activeFile) {
-       // This is a simplification. A robust solution would find the parent ID from the activeFile's ID.
-       // For now, we find the parent path and then its ID.
        const pathParts = activeFile.path.split('/');
-       pathParts.pop(); // Remove file name
+       pathParts.pop();
        const parentPath = pathParts.join('/');
        
        const findId = (nodes, p) => {
@@ -133,28 +117,19 @@ function App() {
        }
        parentId = findId(fileTree, parentPath);
     }
-    
-    // If no active file, or want to create at root, parentId remains null.
-    // The creation logic will then use the root node as the parent.
-    
-    setCreatingNode({ type, parentId });
-    
-    if (parentId) {
-      setExpandedFolders(prev => new Set(prev).add(parentId));
-    }
+    dispatch({ type: actionTypes.INITIATE_CREATION, payload: { type, parentId } });
   };
 
   const handleCancelCreation = () => {
-    setCreatingNode(null);
+    dispatch({ type: actionTypes.CANCEL_CREATION });
   };
 
   const handleFinalizeCreation = async (name) => {
     if (!name || !creatingNode) {
-      setCreatingNode(null);
+      dispatch({ type: actionTypes.CANCEL_CREATION });
       return;
     }
 
-    // Find parent path from parentId
     let parentPath = null;
     if (creatingNode.parentId) {
       const findPath = (nodes, id) => {
@@ -169,13 +144,12 @@ function App() {
       };
       parentPath = findPath(fileTree, creatingNode.parentId);
     } else {
-      // Assume root is the parent if no parentId
       parentPath = fileTree.length > 0 ? fileTree[0].path : null;
     }
 
     if (parentPath === null) {
       console.error("Could not find parent path to create node.");
-      setCreatingNode(null);
+      dispatch({ type: actionTypes.CANCEL_CREATION });
       return;
     }
 
@@ -202,31 +176,11 @@ function App() {
       }
 
       const newNode = await response.json();
-
-      // Add the new node to the file tree in the state
-      const addToTree = (nodes, pId, nNode) => {
-        return nodes.map(node => {
-          if (node.id === pId) {
-            return { ...node, children: [...(node.children || []), nNode] };
-          }
-          if (node.children) {
-            return { ...node, children: addToTree(node.children, pId, nNode) };
-          }
-          return node;
-        });
-      };
-      
-      if (creatingNode.parentId) {
-        setFileTree(prevTree => addToTree(prevTree, creatingNode.parentId, newNode));
-      } else {
-        // This case might need adjustment if root is not the direct parent
-        setFileTree(prevTree => [...prevTree, newNode]);
-      }
+      dispatch({ type: actionTypes.ADD_NODE, payload: { parentId: creatingNode.parentId, newNode } });
 
     } catch (error) {
       console.error(`Error creating ${creatingNode.type}:`, error);
-    } finally {
-      setCreatingNode(null);
+      dispatch({ type: actionTypes.CANCEL_CREATION });
     }
   };
 
@@ -241,69 +195,56 @@ function App() {
         throw new Error(`Failed to delete node: ${errorText}`);
       }
 
-      // If API call is successful, update the frontend state
-      const removeNode = (nodes, id) => {
-        return nodes.filter(node => node.id !== id).map(node => {
-          if (node.children) {
-            node.children = removeNode(node.children, id);
-          }
-          return node;
-        });
-      };
-
-      setFileTree(prevTree => removeNode(prevTree, nodeId));
-
-      if (activeFile && activeFile.id === nodeId) {
-        setActiveFile(null);
-      }
+      dispatch({ type: actionTypes.REMOVE_NODE, payload: nodeId });
 
     } catch (error) {
       console.error("Error deleting node:", error);
-      // Optionally, show an error message to the user
     }
   };
 
-  const handleMoveNode = (sourceId, destinationId) => {
-    let sourceNode = null;
-
-    // Deep copy to avoid direct state mutation
-    const newTree = JSON.parse(JSON.stringify(fileTree));
-
-    // Helper to find and remove the source node
-    const findAndRemove = (nodes, id) => {
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        if (node.id === id) {
-          sourceNode = node;
-          nodes.splice(i, 1); // Remove node from its original parent
-          return true;
-        }
-        if (node.children) {
-          if (findAndRemove(node.children, id)) return true;
-        }
-      }
-      return false;
-    };
-
-    // Helper to find the destination and add the source node
-    const findAndAdd = (nodes, id) => {
+  const handleMoveNode = async (sourceId, destinationId) => {
+    const findNode = (nodes, id) => {
       for (const node of nodes) {
-        if (node.id === id && node.type === 'folder') {
-          node.children.push(sourceNode);
-          return true;
-        }
+        if (node.id === id) return node;
         if (node.children) {
-          if (findAndAdd(node.children, id)) return true;
+          const found = findNode(node.children, id);
+          if (found) return found;
         }
       }
-      return false;
+      return null;
     };
 
-    findAndRemove(newTree, sourceId);
+    const sourceNode = findNode(fileTree, sourceId);
+    const destinationNode = findNode(fileTree, destinationId);
 
-    if (sourceNode) {
-      findAndAdd(newTree, destinationId);
-      setFileTree(newTree);
+    if (!sourceNode || !destinationNode || destinationNode.type !== 'folder') {
+      console.error("Invalid source or destination for move.");
+      return;
+    }
+
+    const requestBody = {
+      sourcePath: sourceNode.path,
+      destinationPath: destinationNode.path,
+    };
+
+    try {
+      const response = await fetch('http://localhost:8080/api/files/move', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to move node: ${errorText}`);
+      }
+      
+      // Dispatch move action to update UI
+      dispatch({ type: actionTypes.MOVE_NODE, payload: { sourceId, destinationId } });
+
+    } catch (error) {
+      console.error("Error moving node:", error);
+      // Optionally: show an error message to the user
     }
   };
 
@@ -315,35 +256,15 @@ function App() {
       return;
     }
 
-    // Use a variable to hold the latest state to avoid stale closures in setTimeout
-    const updatedActiveFile = { ...activeFile, content: newContent };
+    dispatch({ type: actionTypes.UPDATE_NODE_CONTENT, payload: { fileId: activeFile.id, newContent } });
 
-    // Update UI state immediately for responsiveness
-    setActiveFile(updatedActiveFile);
-
-    const updateNodeInTree = (nodes, fileId, content) => {
-      return nodes.map(node => {
-        if (node.id === fileId) {
-          return { ...node, content };
-        }
-        if (node.children) {
-          return { ...node, children: updateNodeInTree(node.children, fileId, content) };
-        }
-        return node;
-      });
-    };
-    setFileTree(prevTree => updateNodeInTree(prevTree, activeFile.id, newContent));
-
-    // Clear the previous debounce timer
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Set a new timer to save the content after a delay
     debounceTimeoutRef.current = setTimeout(async () => {
-      // Use the updated file info in the closure
       try {
-        const response = await fetch(`http://localhost:8080/api/files/content?path=${encodeURIComponent(updatedActiveFile.path)}`, {
+        const response = await fetch(`http://localhost:8080/api/files/content?path=${encodeURIComponent(activeFile.path)}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -356,7 +277,7 @@ function App() {
           throw new Error(`Failed to save content: ${errorText}`);
         }
         
-        console.log(`File ${updatedActiveFile.name} saved successfully.`);
+        console.log(`File ${activeFile.name} saved successfully.`);
       } catch (error) {
         console.error("Error saving file:", error);
       }
