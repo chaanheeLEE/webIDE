@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import './Mypage.css';
-import { jwtDecode } from 'jwt-decode'; // Use a named import
+import jwtDecode from 'jwt-decode'; // Use a named import
 
 const Mypage = () => {
     const [currentUser, setCurrentUser] = useState({ email: '', username: '' });
@@ -19,6 +19,10 @@ const Mypage = () => {
             } catch (e) {
                 console.error("Invalid token", e);
                 setError("Invalid session. Please log in again.");
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                delete axiosInstance.defaults.headers.common['Authorization'];
+                window.location.href = '/login'; // 강제 로그인 페이지 이동
             }
         }
     }, []);
@@ -52,7 +56,7 @@ const Mypage = () => {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             delete axiosInstance.defaults.headers.common['Authorization'];
-            window.location.href = '/login'; // Force reload to clear state
+            window.location.href = '/login'; // Redirect to login after deletion
         } catch (err) {
             setError('Failed to delete account. Please check your password.');
             console.error(err);
