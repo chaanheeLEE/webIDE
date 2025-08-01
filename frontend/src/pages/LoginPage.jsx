@@ -8,11 +8,15 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isLoading) return;
+
         setError('');
+        setIsLoading(true);
         try {
             const response = await axiosInstance.post('/members/login', { email, password });
             const { accessToken, refreshToken } = response.data;
@@ -21,8 +25,11 @@ const LoginPage = () => {
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
             navigate('/');
         } catch (err) {
-            setError('Login failed. Please check your credentials.');
+            const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
+            setError(errorMessage);
             console.error(err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -41,6 +48,7 @@ const LoginPage = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="form-group">
@@ -51,9 +59,12 @@ const LoginPage = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
-                    <button type="submit" className="login-button">Login</button>
+                    <button type="submit" className="login-button" disabled={isLoading}>
+                        {isLoading ? 'Logging in...' : 'Login'}
+                    </button>
                 </form>
             </div>
         </>

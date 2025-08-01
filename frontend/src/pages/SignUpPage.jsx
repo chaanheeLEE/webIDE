@@ -9,17 +9,24 @@ const SignUpPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isLoading) return;
+
         setError('');
+        setIsLoading(true);
         try {
             await axiosInstance.post('/members/signup', { email, username, password });
             navigate('/login');
         } catch (err) {
-            setError('Sign up failed. Please check your information.');
+            const errorMessage = err.response?.data?.message || 'Sign up failed. Please check your information.';
+            setError(errorMessage);
             console.error(err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -38,6 +45,7 @@ const SignUpPage = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="form-group">
@@ -48,6 +56,7 @@ const SignUpPage = () => {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="form-group">
@@ -58,9 +67,12 @@ const SignUpPage = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            disabled={isLoading}
                         />
                     </div>
-                    <button type="submit" className="signup-button">Sign Up</button>
+                    <button type="submit" className="signup-button" disabled={isLoading}>
+                        {isLoading ? 'Signing up...' : 'Sign Up'}
+                    </button>
                 </form>
             </div>
         </>
