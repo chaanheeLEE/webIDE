@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { getLanguageForFile, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from './languages';
+import { getLanguageForFile, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../languages';
 
 const Editor = ({ activeFile, onChange }) => {
   const [extensions, setExtensions] = useState([]);

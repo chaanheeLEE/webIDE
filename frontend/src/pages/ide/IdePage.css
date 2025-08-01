@@ -1,0 +1,41 @@
+.main-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.content-area {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background-color: #252526;
+    color: #ccc;
+    overflow-y: auto;
+    border-right: 1px solid #333;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Give Editor and OutputConsole specific flex properties */
+.main-content > .monaco-editor-container { /* Assuming Editor has this class */
+    flex: 1 1 60%; /* Grow and shrink, basis 60% */
+    min-height: 0; /* Needed for flexbox to shrink properly */
+}
+
+.main-content > .output-console { /* Assuming OutputConsole has this class */
+    flex: 1 1 40%; /* Grow and shrink, basis 40% */
+    min-height: 0; /* Needed for flexbox to shrink properly */
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+}

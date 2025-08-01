@@ -168,7 +168,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
           <VscTrash />
         </button>
       </li>
-      {isExpanded && node.children && (
+      {isExpanded && Array.isArray(node.children) && (
         <ul className="tree-children">
           {node.children.map((childNode) => (
             <TreeNode
@@ -192,7 +192,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
 
 
 const FileExplorer = ({ 
-  fileTree, 
+  fileTree = [], // Set default prop to an empty array
   activeFile, 
   expandedFolders, 
   creatingNode,
@@ -219,7 +219,7 @@ const FileExplorer = ({
       </div>
       <div className="explorer-content">
         <ul className="tree-root">
-          {fileTree.map((node) => (
+          {Array.isArray(fileTree) && fileTree.map((node) => (
              <TreeNode
               key={node.id}
               node={node}

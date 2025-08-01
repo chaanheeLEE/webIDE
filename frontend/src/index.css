@@ -23,14 +23,15 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--background-color);
-  color: var(--foreground-color);
-  overflow: hidden; /* Prevent body scrollbars */
+  background-color: #f8f9fa; /* Set a light default background for pages like main/login */
+  color: #212529;
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* App layout styles */

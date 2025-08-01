@@ -1,38 +1,44 @@
 import React from 'react';
-import { VscAccount, VscPlay } from 'react-icons/vsc';
-import { SlSettings } from 'react-icons/sl';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 import './Header.css';
 
-const Header = ({ onRun, isRunDisabled }) => {
-  return (
-    <header className="header">
-      <div className="header-left">
-        <div className="logo">IDE</div>
-        <nav className="menu">
-          <button className="menu-item">File</button>
-          <button className="menu-item">Edit</button>
-          <button className="menu-item">View</button>
-          <button className="menu-item">Go</button>
-          <button className="menu-item">Terminal</button>
-          <button className="menu-item">Help</button>
-        </nav>
-      </div>
-      <div className="header-center">
-        <button className="run-button" onClick={onRun} disabled={isRunDisabled}>
-          <VscPlay size={20} />
-          <span>Run</span>
-        </button>
-      </div>
-      <div className="header-right">
-        <button className="icon-button">
-          <SlSettings size={20} />
-        </button>
-        <button className="icon-button">
-          <VscAccount size={20} />
-        </button>
-      </div>
-    </header>
-  );
+const Header = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isAuthenticated = !!localStorage.getItem('accessToken');
+
+    const handleLogout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        delete axiosInstance.defaults.headers.common['Authorization'];
+        navigate('/login');
+    };
+
+    // Determine if the header should be for the main site or the IDE
+    const isIdeMode = location.pathname.startsWith('/ide');
+
+    return (
+        <header className={`app-header ${isIdeMode ? 'ide-header' : 'main-header'}`}>
+            <div className="logo">
+                <Link to="/">ProjectHub</Link>
+            </div>
+            <nav className="navigation">
+                <Link to="/ide">IDE</Link>
+                {isAuthenticated ? (
+                    <>
+                        <Link to="/mypage">My Page</Link>
+                        <button onClick={handleLogout} className="logout-button">Logout</button>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login" className="login-button">Login</Link>
+                        <Link to="/signup" className="signup-button">Sign Up</Link>
+                    </>
+                )}
+            </nav>
+        </header>
+    );
 };
 
 export default Header;
