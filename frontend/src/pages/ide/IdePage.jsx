@@ -1,63 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import Header from '../../components/Header';
 import FileExplorer from '../../components/FileExplorer';
 import Editor from '../../components/Editor';
 import OutputConsole from '../../components/OutputConsole';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import axiosInstance from '../../api/axiosInstance';
+import { fileTreeReducer, initialState, actionTypes } from '../../fileTreeReducer';
 import './IdePage.css';
 
 const IdePage = () => {
-    const [fileTree, setFileTree] = useState([]);
-    const [activeFile, setActiveFile] = useState(null);
-    const [expandedFolders, setExpandedFolders] = useState(new Set());
-    const [creatingNode, setCreatingNode] = useState(null); // { type: 'file' | 'folder', parentId: string | null }
+    const [state, dispatch] = useReducer(fileTreeReducer, initialState);
+    const { fileTree, activeFile, expandedFolders, creatingNode } = state;
 
     // Fetch initial file tree
     useEffect(() => {
         const fetchFileTree = async () => {
             try {
-                // Assuming you have an endpoint to get the whole tree or root
-                const response = await axiosInstance.get('/files/root'); 
-                setFileTree(response.data ? [response.data] : []);
+                const response = await axiosInstance.get('/files/root');
+                dispatch({ type: actionTypes.SET_TREE, payload: response.data ? [response.data] : [] });
             } catch (error) {
                 console.error("Failed to fetch file tree:", error);
-                setFileTree([]); // Set to empty array on error
+                dispatch({ type: actionTypes.SET_TREE, payload: [] });
             }
         };
         fetchFileTree();
     }, []);
 
     const handleFileSelect = (file) => {
-        setActiveFile(file);
+        dispatch({ type: actionTypes.SET_ACTIVE_FILE, payload: file });
     };
 
     const handleFolderToggle = (folderId) => {
-        setExpandedFolders(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(folderId)) {
-                newSet.delete(folderId);
-            } else {
-                newSet.add(folderId);
-            }
-            return newSet;
-        });
-    };
-    
-    // Placeholder functions for file operations
-    const handleInitiateCreation = (type, parentId = null) => console.log("Initiate creation:", type, parentId);
-    const handleFinalizeCreation = (name) => console.log("Finalize creation:", name);
-    const handleCancelCreation = () => console.log("Cancel creation");
-    const handleDeleteNode = (path, nodeId) => console.log("Delete node:", path, nodeId);
-    const handleMoveNode = (sourceId, targetId) => console.log("Move node:", sourceId, "to", targetId);
-    const handleEditorChange = (value, viewUpdate) => {
-        if (activeFile) {
-            // This is where you'd handle saving the file content, maybe with a debounce
-            // For now, just update the local state
-            setActiveFile(prev => ({ ...prev, content: value }));
-        }
+        dispatch({ type: actionTypes.TOGGLE_FOLDER, payload: folderId });
     };
 
+    const handleInitiateCreation = (type, parentId = null) => {
+        dispatch({ type: actionTypes.INITIATE_CREATION, payload: { type, parentId } });
+    };
+
+    const handleFinalizeCreation = (name) => {
+        if (!creatingNode) return;
+
+        const newNode = {
+            id: Date.now().toString(), // Temporary ID, should be replaced by server response
+            name,
+            type: creatingNode.type,
+            ...(creatingNode.type === 'folder' && { children: [] }),
+        };
+
+        dispatch({ type: actionTypes.ADD_NODE, payload: { parentId: creatingNode.parentId, newNode } });
+    };
+
+    const handleCancelCreation = () => {
+        dispatch({ type: actionTypes.CANCEL_CREATION });
+    };
+
+    const handleDeleteNode = (nodeId) => {
+        dispatch({ type: actionTypes.REMOVE_NODE, payload: nodeId });
+    };
+
+    const handleMoveNode = (sourceId, destinationId) => {
+        dispatch({ type: actionTypes.MOVE_NODE, payload: { sourceId, destinationId } });
+    };
+
+    const handleEditorChange = (newContent) => {
+        if (activeFile) {
+            dispatch({ type: actionTypes.UPDATE_NODE_CONTENT, payload: { fileId: activeFile.id, newContent } });
+        }
+    };
 
     return (
         <div className="main-layout">
