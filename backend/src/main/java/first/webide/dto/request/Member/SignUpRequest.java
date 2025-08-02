@@ -1,4 +1,4 @@
-package first.webide.dto.request;
+package first.webide.dto.request.Member;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
