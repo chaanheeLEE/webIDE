@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateProjectRequest {
     @NotBlank(message = "프로젝트 이름은 필수입니다.")
-    private String name;
+    private String projectName;
     private String description;
 }

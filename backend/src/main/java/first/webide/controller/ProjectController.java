@@ -1,5 +1,6 @@
 package first.webide.controller;
 
+import first.webide.config.auth.UserDetailsImpl;
 import first.webide.dto.request.Project.CreateProjectRequest;
 import first.webide.dto.request.Project.UpdateProjectPublishRequest;
 import first.webide.dto.request.Project.UpdateProjectRequest;
@@ -16,12 +17,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/projects")
+@RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
 @Tag(name = "Project  API", description = "프로젝트 관리 API")
 public class ProjectController {
@@ -31,32 +33,34 @@ public class ProjectController {
     /**
      *  Create
      */
-    @Operation(summary = "프로젝트 생성")
+    @Operation(summary = "프로젝트 생성 (인증 필요)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "프로젝트 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음")
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    @PostMapping("/members/{memberId}")
+    @PostMapping
     public ResponseEntity<ProjectResponse> createProject(
             @Valid @RequestBody CreateProjectRequest request,
-            @PathVariable("memberId") Long memberId) {
-        ProjectResponse created = projectService.createProject(memberId, request);
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        ProjectResponse created = projectService.createProject(memberEmail, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
      *  Read
      */
-    @Operation(summary = "회원별 프로젝트 목록 조회")
+    @Operation(summary = "내 프로젝트 목록 조회 (인증 필요)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "프로젝트 목록 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음")
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    @GetMapping("/members/{memberId}")
-    public ResponseEntity<List<ProjectResponse>> getProjectsByMember(
-            @PathVariable Long memberId) {
-        List<ProjectResponse> projects = projectService.getProjectsByMember(memberId);
+    @GetMapping("/my")
+    public ResponseEntity<List<ProjectResponse>> getMyProjects(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        List<ProjectResponse> projects = projectService.getProjectsByMemberEmail(memberEmail);
         return ResponseEntity.ok(projects);
     }
 
@@ -74,52 +78,56 @@ public class ProjectController {
      * Update
      */
 
-    @Operation(summary = "프로젝트 이름 및 설명 수정")
+    @Operation(summary = "프로젝트 이름 및 설명 수정 (인증 필요)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "프로젝트 정보 수정 성공"),
-            @ApiResponse(responseCode = "404", description = "프로젝트나 회원을 찾을 수 없음"),
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음"),
             @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    @PatchMapping("/members/{memberId}/{projectId}")
+    @PatchMapping("/{projectId}")
     public ResponseEntity<ProjectResponse> updateProjectInfo(
-            @PathVariable Long memberId,
             @PathVariable Long projectId,
-            @Valid @RequestBody UpdateProjectRequest request) {
-
-        ProjectResponse updated = projectService.updateProjectInfo(memberId, projectId, request);
+            @Valid @RequestBody UpdateProjectRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        ProjectResponse updated = projectService.updateProjectInfo(memberEmail, projectId, request);
         return ResponseEntity.ok(updated);
     }
 
-    @Operation(summary = "프로젝트 공개/비공개 상태 변경")
+    @Operation(summary = "프로젝트 공개/비공개 상태 변경 (인증 필요)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "공개 상태 변경 성공"),
-            @ApiResponse(responseCode = "404", description = "프로젝트나 회원을 찾을 수 없음"),
-            @ApiResponse(responseCode = "403", description = "권한 없음")
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    @PatchMapping("/members/{memberId}/{projectId}/publish")
+    @PatchMapping("/{projectId}/publish")
     public ResponseEntity<ProjectResponse> updateProjectPublish(
-            @PathVariable Long memberId,
             @PathVariable Long projectId,
-            @Valid @RequestBody UpdateProjectPublishRequest request) {
-        ProjectResponse updated = projectService.updateProjectPublish(memberId, projectId, request);
+            @Valid @RequestBody UpdateProjectPublishRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        ProjectResponse updated = projectService.updateProjectPublish(memberEmail, projectId, request);
         return ResponseEntity.ok(updated);
     }
 
     /**
      * Delete
      */
-    @Operation(summary = "프로젝트 삭제")
+    @Operation(summary = "프로젝트 삭제 (인증 필요)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "프로젝트 삭제 성공"),
-            @ApiResponse(responseCode = "404", description = "프로젝트나 회원을 찾을 수 없음"),
-            @ApiResponse(responseCode = "403", description = "권한 없음")
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    @DeleteMapping("/members/{memberId}/{projectId}")
+    @DeleteMapping("/{projectId}")
     public ResponseEntity<Void> deleteProject(
-            @PathVariable Long memberId,
-            @PathVariable Long projectId) {
-        projectService.deleteProject(memberId, projectId);
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        projectService.deleteProject(memberEmail, projectId);
         return ResponseEntity.noContent().build();
     }
 }

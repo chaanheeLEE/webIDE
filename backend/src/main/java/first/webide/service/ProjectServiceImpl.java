@@ -35,14 +35,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public ProjectResponse createProject(Long memberId, CreateProjectRequest request) {
-        if (!memberRepository.existsById(memberId)) {
-            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-        }
+    public ProjectResponse createProject(String memberEmail, CreateProjectRequest request) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
         Project project = Project.createProject(
-                request.getName(),
+                request.getProjectName(),
                 request.getDescription(),
-                memberId);
+                member.getId());
         Project savedProject = projectRepository.save(project);
 
         FileNode rootDir = FileNode.createRootDirectory(savedProject.getName());
@@ -52,11 +52,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectResponse> getProjectsByMember(Long memberId) {
-        if (!memberRepository.existsById(memberId)) {
-            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-        }
-        List<Project> projects = projectRepository.findAllByMemberId(memberId);
+    public List<ProjectResponse> getProjectsByMemberEmail(String memberEmail) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        List<Project> projects = projectRepository.findAllByMemberId(member.getId());
         return projects.stream()
                 .map(ProjectResponse::from)
                 .collect(Collectors.toList());
@@ -64,14 +63,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Transactional
     @Override
-    public ProjectResponse updateProjectInfo(Long memberId, Long projectId, UpdateProjectRequest request){
-        if (!memberRepository.existsById(memberId)) {
-            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-        }
-        if (!projectRepository.existsById(projectId)) {
-            throw new BusinessException(ErrorCode.PROJECT_NOT_FOUND);
-        }
-        Project project = getProjectAndCheckOwnership(memberId, projectId);
+    public ProjectResponse updateProjectInfo(String memberEmail, Long projectId, UpdateProjectRequest request){
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Project project = getProjectAndCheckOwnership(member.getId(), projectId);
 
         project.rename(request.getName());
         project.updateDescription(request.getDescription());
@@ -80,8 +75,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public void deleteProject(Long memberId, Long projectId) {
-        Project project = getProjectAndCheckOwnership(memberId, projectId);
+    public void deleteProject(String memberEmail, Long projectId) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Project project = getProjectAndCheckOwnership(member.getId(), projectId);
         if (project.getRootDirId() != null) {
             fileRepository.deleteById(project.getRootDirId());
         }
@@ -112,8 +109,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public ProjectResponse updateProjectPublish(Long memberId, Long projectId, UpdateProjectPublishRequest request) {
-        Project project = getProjectAndCheckOwnership(memberId, projectId);
+    public ProjectResponse updateProjectPublish(String memberEmail, Long projectId, UpdateProjectPublishRequest request) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Project project = getProjectAndCheckOwnership(member.getId(), projectId);
         if (request.getIsPublic()) {
             project.publish();
         } else {
@@ -124,7 +123,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private Project getProjectAndCheckOwnership(Long memberId, Long projectId) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
         if (!project.getMemberId().equals(memberId)) {
             throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
         }

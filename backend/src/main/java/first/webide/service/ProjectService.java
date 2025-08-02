@@ -13,13 +13,13 @@ import java.util.List;
 
 public interface ProjectService {
 
-    ProjectResponse createProject(Long memberId, CreateProjectRequest request);
-    List<ProjectResponse> getProjectsByMember(Long memberId);
+    ProjectResponse createProject(String memberEmail, CreateProjectRequest request);
+    List<ProjectResponse> getProjectsByMemberEmail(String memberEmail);
 
     @Transactional
-    ProjectResponse updateProjectInfo(Long memberId, Long projectId, UpdateProjectRequest request);
+    ProjectResponse updateProjectInfo(String memberEmail, Long projectId, UpdateProjectRequest request);
 
-    void deleteProject(Long memberId, Long projectId);
-    ProjectResponse updateProjectPublish(Long memberId, Long projectId, UpdateProjectPublishRequest request);
+    void deleteProject(String memberEmail, Long projectId);
+    ProjectResponse updateProjectPublish(String memberEmail, Long projectId, UpdateProjectPublishRequest request);
     Page<ProjectHubResponse> getPublicProjects(Pageable pageable);
 }
