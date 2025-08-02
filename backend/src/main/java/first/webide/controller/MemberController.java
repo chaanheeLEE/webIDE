@@ -1,7 +1,6 @@
 package first.webide.controller;
 
 import first.webide.config.auth.UserDetailsImpl;
-import first.webide.config.jwt.JwtTokenProvider;
 import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.dto.response.MemberResponse;
@@ -10,11 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
