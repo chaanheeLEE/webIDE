@@ -61,11 +61,32 @@ public class MemberController {
                 .maxAge(Duration.ofDays(7)) // 쿠키 만료 기간 7일 설정
                 .sameSite("None")           // CORS 상황에 따라 None, Lax, Strict 선택 가능
                 .build();
+        
+        // Create a new response object for the body without the refresh token
+        LoginResponse bodyResponse = new LoginResponse(loginResponse.getTokenType(), loginResponse.getAccessToken(), null);
 
         // Set-Cookie 헤더에 쿠키 추가
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(loginResponse);
+                .body(bodyResponse);
+    }
+
+    @Operation(summary = "로그아웃", description = "로그아웃을 처리하고 리프레시 토큰을 만료시킵니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        memberService.logout(userDetails.getUsername());
+
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0) // 즉시 만료
+                .sameSite("None")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .build();
     }
 
     @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")

@@ -86,6 +86,14 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
+    public void logout(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        refreshTokenRepository.deleteByMember(member);
+    }
+
+    @Override
+    @Transactional
     public LoginResponse reissueToken(String refreshTokenValue) {
         // 1. 리프레시 토큰 검증
         if (!jwtTokenProvider.validateToken(refreshTokenValue)) {
