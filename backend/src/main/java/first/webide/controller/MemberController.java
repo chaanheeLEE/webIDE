@@ -95,10 +95,7 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "잘못된 리프레시 토큰")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refreshToken(@RequestHeader("Authorization") String refreshToken) {
-        if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
-            refreshToken = refreshToken.substring(7);
-        }
+    public ResponseEntity<LoginResponse> refreshToken(@CookieValue("refreshToken") String refreshToken) {
         LoginResponse response = memberService.reissueToken(refreshToken);
         return ResponseEntity.ok(response);
     }
