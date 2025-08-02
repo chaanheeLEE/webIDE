@@ -31,6 +31,10 @@ public enum ErrorCode {
 
     // Language
     UNSUPPORTED_LANGUAGE(HttpStatus.BAD_REQUEST, "L001", "Unsupported Language"),
+
+    // Project
+    PROJECT_ROOT_ALREADY_SET(HttpStatus.BAD_REQUEST, "P001", "Project root directory is already set"),
+    PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "Project not found"),
     ;
 
     private final HttpStatus status; // 상태코드
