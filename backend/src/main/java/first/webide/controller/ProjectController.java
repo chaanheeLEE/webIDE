@@ -4,6 +4,7 @@ import first.webide.config.auth.UserDetailsImpl;
 import first.webide.dto.request.Project.CreateProjectRequest;
 import first.webide.dto.request.Project.UpdateProjectPublishRequest;
 import first.webide.dto.request.Project.UpdateProjectRequest;
+import first.webide.dto.response.FileNodeResponse;
 import first.webide.dto.response.ProjectHubResponse;
 import first.webide.dto.response.ProjectResponse;
 import first.webide.service.ProjectService;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/projects")
+@RequestMapping("/api/projects")
 @RequiredArgsConstructor
 @Tag(name = "Project  API", description = "프로젝트 관리 API")
 public class ProjectController {
@@ -129,5 +130,24 @@ public class ProjectController {
         String memberEmail = userDetails.getMember().getEmail();
         projectService.deleteProject(memberEmail, projectId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 프로젝트 루트 디렉토리 조회
+     */
+    @Operation(summary = "프로젝트 루트 디렉토리 조회 (인증 필요)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "루트 디렉토리 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
+    @GetMapping("/{projectId}/files/root")
+    public ResponseEntity<FileNodeResponse> getProjectRootDirectory(
+            @PathVariable Long projectId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String memberEmail = userDetails.getMember().getEmail();
+        FileNodeResponse rootDir = projectService.getProjectRootDirectory(memberEmail, projectId);
+        return ResponseEntity.ok(rootDir);
     }
 }

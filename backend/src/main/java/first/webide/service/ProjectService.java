@@ -3,6 +3,7 @@ package first.webide.service;
 import first.webide.dto.request.Project.CreateProjectRequest;
 import first.webide.dto.request.Project.UpdateProjectPublishRequest;
 import first.webide.dto.request.Project.UpdateProjectRequest;
+import first.webide.dto.response.FileNodeResponse;
 import first.webide.dto.response.ProjectHubResponse;
 import first.webide.dto.response.ProjectResponse;
 import org.springframework.data.domain.Page;
@@ -22,4 +23,7 @@ public interface ProjectService {
     void deleteProject(String memberEmail, Long projectId);
     ProjectResponse updateProjectPublish(String memberEmail, Long projectId, UpdateProjectPublishRequest request);
     Page<ProjectHubResponse> getPublicProjects(Pageable pageable);
+    
+    // 프로젝트 루트 디렉토리 조회
+    FileNodeResponse getProjectRootDirectory(String memberEmail, Long projectId);
 }

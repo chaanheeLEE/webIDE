@@ -6,6 +6,7 @@ import first.webide.domain.Project;
 import first.webide.dto.request.Project.CreateProjectRequest;
 import first.webide.dto.request.Project.UpdateProjectPublishRequest;
 import first.webide.dto.request.Project.UpdateProjectRequest;
+import first.webide.dto.response.FileNodeResponse;
 import first.webide.dto.response.ProjectHubResponse;
 import first.webide.dto.response.ProjectResponse;
 import first.webide.exception.BusinessException;
@@ -119,6 +120,22 @@ public class ProjectServiceImpl implements ProjectService {
             project.unpublish();
         }
         return ProjectResponse.from(project);
+    }
+
+    @Override
+    public FileNodeResponse getProjectRootDirectory(String memberEmail, Long projectId) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Project project = getProjectAndCheckOwnership(member.getId(), projectId);
+        
+        if (project.getRootDirId() == null) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
+        
+        FileNode rootDir = fileRepository.findById(project.getRootDirId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        
+        return FileNodeResponse.from(rootDir);
     }
 
     private Project getProjectAndCheckOwnership(Long memberId, Long projectId) {
