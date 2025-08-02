@@ -15,13 +15,14 @@ import first.webide.repository.ProjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,7 +38,7 @@ class ProjectServiceImplTest {
     @Autowired
     private ProjectService projectService;
 
-    private Long memberId;
+    private String memberEmail;
     private Project savedProject;
 
 
@@ -52,16 +53,16 @@ class ProjectServiceImplTest {
                 .build();
 
         Member savedMember = memberRepository.save(member);
-        memberId = savedMember.getId();
+        memberEmail = savedMember.getEmail();
 
 
         // 테스트용 프로젝트 생성
         CreateProjectRequest request = CreateProjectRequest.builder()
-                .name("test project")
+                .projectName("test project")
                 .description("test Description")
                 .build();
 
-        ProjectResponse response = projectService.createProject(memberId, request);
+        ProjectResponse response = projectService.createProject(memberEmail, request);
         savedProject = projectRepository.findById(response.getId()).orElseThrow();
     }
 
@@ -69,12 +70,12 @@ class ProjectServiceImplTest {
     @DisplayName("프로젝트 저장")
     void createProject() {
         // given
-
+        Optional<Member> member = memberRepository.findByEmail(memberEmail);
         //then
         assertThat(savedProject).isNotNull();
         assertThat(savedProject.getName()).isEqualTo("test project");
         assertThat(savedProject.getDescription()).isEqualTo("test Description");
-        assertThat(savedProject.getMemberId()).isEqualTo(memberId);
+        assertThat(savedProject.getMemberId()).isEqualTo(member.get().getId());
         assertThat(savedProject.getId()).isNotNull();
 
     }
@@ -87,7 +88,7 @@ class ProjectServiceImplTest {
                 "update project", "update Description");
 
         //when
-        ProjectResponse response = projectService.updateProjectInfo(memberId, savedProject.getId(), updateReq);
+        ProjectResponse response = projectService.updateProjectInfo(memberEmail, savedProject.getId(), updateReq);
 
         // then
         assertThat(response).isNotNull();
@@ -107,7 +108,7 @@ class ProjectServiceImplTest {
         UpdateProjectRequest updateReq = new UpdateProjectRequest("update project", "update Description");
 
         // when
-        BusinessException exception = assertThrows(BusinessException.class, () ->projectService.updateProjectInfo(memberId, projectId, updateReq));
+        BusinessException exception = assertThrows(BusinessException.class, () ->projectService.updateProjectInfo(memberEmail, projectId, updateReq));
 
         // then
         assertThat(exception).isNotNull();
@@ -126,13 +127,13 @@ class ProjectServiceImplTest {
                 .build();
 
         Member savedMember2 = memberRepository.save(Member2);
-        Long member2Id = savedMember2.getId();
+        String member2Email = savedMember2.getEmail();
 
         UpdateProjectRequest updateReq = new UpdateProjectRequest("test2", "update test2");
 
         // when
         BusinessException exception = assertThrows(BusinessException.class,
-                () ->projectService.updateProjectInfo(member2Id, savedProject.getId(), updateReq));
+                () ->projectService.updateProjectInfo(member2Email, savedProject.getId(), updateReq));
 
         // then
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.HANDLE_ACCESS_DENIED);
@@ -152,13 +153,13 @@ class ProjectServiceImplTest {
 
         for (int i = 0; i < 3; i++) {
             CreateProjectRequest request = CreateProjectRequest.builder()
-                    .name("Public Project " + i)
+                    .projectName("Public Project " + i)
                     .description("Description " + i)
                     .build();
-            ProjectResponse created = projectService.createProject(savedMember.getId(), request);
+            ProjectResponse created = projectService.createProject(savedMember.getEmail(), request);
 
             UpdateProjectPublishRequest publishRequest = new UpdateProjectPublishRequest(true);
-            projectService.updateProjectPublish(savedMember.getId(),created.getId(), publishRequest);
+            projectService.updateProjectPublish(savedMember.getEmail(),created.getId(), publishRequest);
         }
 
         // when
@@ -175,18 +176,18 @@ class ProjectServiceImplTest {
     void updateProjectPublish() {
         // given
         CreateProjectRequest createReq = CreateProjectRequest.builder()
-                .name("private project")
+                .projectName("private project")
                 .description("description")
                 .build();
-        ProjectResponse created = projectService.createProject(memberId, createReq);
+        ProjectResponse created = projectService.createProject(memberEmail, createReq);
 
         //when
         UpdateProjectPublishRequest updateReq = new UpdateProjectPublishRequest(true);
-        ProjectResponse updated = projectService.updateProjectPublish(memberId, created.getId(), updateReq);
+        ProjectResponse updated = projectService.updateProjectPublish(memberEmail, created.getId(), updateReq);
 
         //then
         assertThat(updated).isNotNull();
-        assertThat(updated.getName()).isEqualTo(createReq.getName());
+        assertThat(updated.getName()).isEqualTo(createReq.getProjectName());
         assertThat(updated.getDescription()).isEqualTo(createReq.getDescription());
 
         Project project = projectRepository.findById(created.getId()).orElseThrow();
@@ -198,15 +199,15 @@ class ProjectServiceImplTest {
     void deleteProject() {
         // give
         CreateProjectRequest createRequest = CreateProjectRequest.builder()
-                .name("Project To Delete")
+                .projectName("Project To Delete")
                 .description("To be deleted")
                 .build();
-        ProjectResponse created = projectService.createProject(memberId, createRequest);
+        ProjectResponse created = projectService.createProject(memberEmail, createRequest);
 
         Long projectId = created.getId();
 
         // when
-        projectService.deleteProject(memberId, projectId);
+        projectService.deleteProject(memberEmail, projectId);
 
         // then
         assertThat(projectRepository.findById(projectId)).isEmpty();

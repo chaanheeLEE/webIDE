@@ -49,8 +49,7 @@ public class MemberController {
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request,
-            HttpServletResponse response) {
+            @Valid @RequestBody LoginRequest request) {
         LoginResponse loginResponse = memberService.login(request);
         String refreshToken = loginResponse.getRefreshToken();
 
