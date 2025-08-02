@@ -2,17 +2,23 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import './Header.css';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const isAuthenticated = !!localStorage.getItem('accessToken');
+    const { isAuthenticated, logout } = useAuth();
 
-    const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        delete axiosInstance.defaults.headers.common['Authorization'];
-        navigate('/login');
+    const handleLogout = async () => {
+        try {
+            await axiosInstance.post('/members/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            logout();
+            delete axiosInstance.defaults.headers.common['Authorization'];
+            navigate('/login');
+        }
     };
 
     // Determine if the header should be for the main site or the IDE

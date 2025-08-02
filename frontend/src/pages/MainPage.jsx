@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiPlus, FiBox, FiUsers, FiTrendingUp } from 'react-icons/fi';
 import Header from '../components/Header';
-import CreationInput from '../components/CreationInput'; // Assuming CreationInput is a modal component
-import axiosInstance from '../api/axiosInstance';
+import ProjectCreationModal from '../components/ProjectCreationModal';
+import { createProject } from '../api/projectApi';
+import { useAuth } from '../context/AuthContext';
 import './MainPage.css';
 
 const ProjectCard = ({ icon, title, description }) => (
@@ -33,16 +34,13 @@ const HubProject = ({ team, title, description, progress, members }) => (
 
 
 const MainPage = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const token = localStorage.getItem('accessToken');
-        setIsAuthenticated(!!token);
-    }, []);
+    const { isAuthenticated } = useAuth();
 
     const handleOpenModal = () => {
+        console.log('isAuthenticated:', isAuthenticated); // 디버깅용
         if (isAuthenticated) {
             setIsModalOpen(true);
         } else {
@@ -53,30 +51,47 @@ const MainPage = () => {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setIsCreating(false);
     };
 
     const handleCreateProject = async (name, description) => {
         if (!name.trim()) {
-            alert('프로젝트 이름을 입력해주세요.');
-            return;
+            return; // 모달에서 이미 유효성 검사를 하므로 이 경우는 발생하지 않음
         }
+        
+        setIsCreating(true);
         try {
-            const response = await axiosInstance.post('/api/v1/projects', {
+            const response = await createProject({
                 projectName: name,
                 description: description,
             });
             alert('프로젝트가 성공적으로 생성되었습니다.');
             setIsModalOpen(false);
-            navigate(`/ide/${response.data.projectId}`);
+            navigate(`/ide/${response.id}`);
         } catch (error) {
             console.error('Error creating project:', error);
-            alert('프로젝트 생성에 실패했습니다.');
+            
+            let errorMessage = '프로젝트 생성에 실패했습니다.';
+            
+            if (error.status === 401 || error.status === 403) {
+                errorMessage = '로그인이 필요하거나 권한이 없습니다. 다시 로그인해주세요.';
+            } else if (error.status === 500) {
+                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            } else if (error.status === 0) {
+                errorMessage = '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
+        } finally {
+            setIsCreating(false);
         }
     };
 
     const handleMyProjectsClick = () => {
+        console.log('isAuthenticated:', isAuthenticated); // 디버깅용
         if (isAuthenticated) {
-            // Assuming there is a page for user's projects
             navigate('/my-projects');
         } else {
             alert('로그인이 필요합니다.');
@@ -104,16 +119,12 @@ const MainPage = () => {
                     </div>
                 </section>
                 
-                {isModalOpen && (
-                    <CreationInput
-                        onClose={handleCloseModal}
-                        onCreate={handleCreateProject}
-                        title="새 프로젝트 생성"
-                        nameLabel="프로젝트 이름"
-                        descriptionLabel="프로젝트 설명"
-                        buttonText="생성"
-                    />
-                )}
+                <ProjectCreationModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    onCreate={handleCreateProject}
+                    isLoading={isCreating}
+                />
 
                 <section className="project-hub">
                     <h2>프로젝트 허브</h2>

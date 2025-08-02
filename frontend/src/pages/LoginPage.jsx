@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import { login as loginApi } from '../api/authApi';
 import Header from '../components/Header';
 import './LoginPage.css';
 import { useAuth } from '../context/AuthContext';
@@ -20,13 +20,12 @@ const LoginPage = () => {
         setError('');
         setIsLoading(true);
         try { 
-            const response = await axiosInstance.post('/members/login', { email, password });
-            const { accessToken } = response.data;
+            const response = await loginApi({ email, password });
+            const { accessToken } = response;
             login(accessToken);
-            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
             navigate('/');
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
+            const errorMessage = err.message || 'Login failed. Please check your credentials.';
             setError(errorMessage);
             console.error(err);
         } finally {
