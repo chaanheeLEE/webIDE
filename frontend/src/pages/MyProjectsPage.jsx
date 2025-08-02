@@ -6,9 +6,13 @@ import { getMyProjects, deleteProject, updateProjectPublishStatus } from '../api
 import { useAuth } from '../context/AuthContext';
 import './MyProjectsPage.css';
 
-const ProjectCard = ({ project, onEdit, onDelete, onTogglePublish }) => {
+const ProjectCard = ({ project, onEdit, onDelete }) => {
   const navigate = useNavigate();
-  const [isPublished, setIsPublished] = useState(project.isPublished || false);
+  const [isPublished, setIsPublished] = useState(project.isPublic || false);
+
+  useEffect(() => {
+    setIsPublished(project.isPublic || false);
+  }, [project.isPublic]);
 
   const handleOpenProject = () => {
     navigate(`/ide/${project.id}`);
@@ -16,8 +20,9 @@ const ProjectCard = ({ project, onEdit, onDelete, onTogglePublish }) => {
 
   const handleTogglePublish = async () => {
     try {
-      await onTogglePublish(project.id, !isPublished);
+      await updateProjectPublishStatus(project.id, { isPublic: !isPublished });
       setIsPublished(!isPublished);
+      alert(`프로젝트가 ${!isPublished ? '공개' : '비공개'} 상태로 변경되었습니다.`);
     } catch (error) {
       console.error('Failed to toggle publish status:', error);
       alert('공개 상태 변경에 실패했습니다.');
@@ -151,7 +156,7 @@ const MyProjectsPage = () => {
           <h1>내 프로젝트</h1>
           <button 
             className="create-project-btn"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { state: { openCreationModal: true } })}
           >
             새 프로젝트 생성
           </button>
@@ -165,7 +170,7 @@ const MyProjectsPage = () => {
             <p>새 프로젝트를 생성하여 시작해보세요!</p>
             <button 
               className="create-first-project-btn"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/', { state: { openCreationModal: true } })}
             >
               첫 프로젝트 생성하기
             </button>
@@ -178,7 +183,6 @@ const MyProjectsPage = () => {
                 project={project}
                 onEdit={handleEditProject}
                 onDelete={handleDeleteProject}
-                onTogglePublish={handleTogglePublish}
               />
             ))}
           </div>

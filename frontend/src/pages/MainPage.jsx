@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiPlus, FiBox, FiUsers, FiTrendingUp } from 'react-icons/fi';
 import Header from '../components/Header';
 import ProjectCreationModal from '../components/ProjectCreationModal';
-import { createProject } from '../api/projectApi';
+import { getPublicProjects, createProject } from '../api/projectApi';
 import { useAuth } from '../context/AuthContext';
 import './MainPage.css';
 
@@ -15,19 +15,19 @@ const ProjectCard = ({ icon, title, description }) => (
     </div>
 );
 
-const HubProject = ({ team, title, description, progress, members }) => (
-    <div className="hub-project-card">
+const HubProject = ({ project, onClick }) => (
+    <div className="hub-project-card" onClick={() => onClick(project.id)}>
         <div className="hub-project-header">
-            <span className="team-name">{team}</span>
-            <h4>{title}</h4>
+            <span className="team-name">{project.ownerNickname || 'Unknown Team'}</span>
+            <h4>{project.name}</h4>
         </div>
-        <p className="hub-project-description">{description}</p>
+        <p className="hub-project-description">{project.description}</p>
         <div className="hub-project-footer">
             <div className="progress-bar">
-                <div style={{ width: `${progress}%` }}></div>
+                <div style={{ width: `0%` }}></div> {/* Progress data is not available */}
             </div>
-            <span className="progress-text">{progress}%</span>
-            <div className="member-avatars">{members}</div>
+            <span className="progress-text">0%</span>
+            <div className="member-avatars">👥</div>
         </div>
     </div>
 );
@@ -36,8 +36,33 @@ const HubProject = ({ team, title, description, progress, members }) => (
 const MainPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [publicProjects, setPublicProjects] = useState([]);
+    const [loadingProjects, setLoadingProjects] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
     const { isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (location.state?.openCreationModal && isAuthenticated) {
+            setIsModalOpen(true);
+        }
+    }, [location.state, isAuthenticated]);
+
+    useEffect(() => {
+        const fetchPublicProjects = async () => {
+            try {
+                setLoadingProjects(true);
+                const response = await getPublicProjects({ page: 0, size: 6, sort: 'updatedAt,desc' });
+                setPublicProjects(response.content || []);
+            } catch (error) {
+                console.error('Error fetching public projects:', error);
+            } finally {
+                setLoadingProjects(false);
+            }
+        };
+
+        fetchPublicProjects();
+    }, []);
 
     const handleOpenModal = () => {
         console.log('isAuthenticated:', isAuthenticated); // 디버깅용
@@ -89,6 +114,15 @@ const MainPage = () => {
         }
     };
 
+    const handleHubProjectClick = (projectId) => {
+        if (isAuthenticated) {
+            navigate(`/ide/${projectId}`);
+        } else {
+            alert('프로젝트에 접근하려면 로그인이 필요합니다.');
+            navigate('/login');
+        }
+    };
+
     const handleMyProjectsClick = () => {
         console.log('isAuthenticated:', isAuthenticated); // 디버깅용
         if (isAuthenticated) {
@@ -130,18 +164,21 @@ const MainPage = () => {
                     <h2>프로젝트 허브</h2>
                     <div className="hub-filters">
                         <button className="filter-active">공유된 프로젝트</button>
-                        <button>내 프로젝트</button>
-                        <button>즐겨찾기</button>
-                        <button>최근 작업</button>
                     </div>
                     <div className="hub-projects-grid">
-                        {/* Dummy Data */}
-                        <HubProject team="마케팅 팀" title="웹사이트 리뉴얼" description="회사 웹사이트의 전면적인 리뉴얼 프로젝트입니다." progress={75} members={"👥"} />
-                        <HubProject team="개발 팀" title="모바일 앱 개발" description="iOS 및 Android 네이ティブ 앱 개발 프로젝트입니다." progress={30} members={"👥"} />
-                        <HubProject team="디자인 팀" title="브랜드 가이드라인" description="새로운 브랜드 아이덴티티 및 가이드라인 제작" progress={100} members={"👥"} />
-                        <HubProject team="데이터 팀" title="데이터 분석 시스템" description="고객 데이터 분석을 위한 대시보드 구축 프로젝트" progress={60} members={"👥"} />
-                        <HubProject team="고객 서비스 팀" title="고객 지원 시스템" description="효율적인 고객 지원을 위한 티켓팅 시스템 도입" progress={90} members={"👥"} />
-                        <HubProject team="보안 팀" title="보안 강화 프로젝트" description="시스템 보안 강화 및 취약점 보완 프로젝트" progress={10} members={"👥"} />
+                        {loadingProjects ? (
+                            <p>프로젝트를 불러오는 중...</p>
+                        ) : publicProjects.length > 0 ? (
+                            publicProjects.map(project => (
+                                <HubProject 
+                                    key={project.id} 
+                                    project={project} 
+                                    onClick={handleHubProjectClick}
+                                />
+                            ))
+                        ) : (
+                            <p>공유된 프로젝트가 없습니다.</p>
+                        )}
                     </div>
                 </section>
             </main>

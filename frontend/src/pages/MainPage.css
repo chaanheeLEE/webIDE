@@ -55,9 +55,15 @@
 }
 
 .secondary-button {
-    background-color: white;
+    background-color: gainsboro;
     color: #212529;
-    border-color: #ced4da;
+    border: 1px solid #ced4da;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.secondary-button:hover {
+    background-color: #f1f3f5;
+    border-color: #adb5bd;
 }
 
 .project-cards-grid {
@@ -139,6 +145,13 @@
     padding: 1.5rem;
     border: 1px solid #dee2e6;
     border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hub-project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .hub-project-header {

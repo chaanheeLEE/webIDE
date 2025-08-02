@@ -110,6 +110,7 @@ export const updateProject = async (projectId, updateData) => {
  */
 export const updateProjectPublishStatus = async (projectId, publishData) => {
   try {
+    // publishData should be an object like { isPublished: true }
     const response = await axiosInstance.patch(`/projects/${projectId}/publish`, publishData);
     return response.data;
   } catch (error) {
