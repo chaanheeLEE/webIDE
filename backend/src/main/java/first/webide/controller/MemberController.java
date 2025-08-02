@@ -1,6 +1,7 @@
 package first.webide.controller;
 
 import first.webide.config.auth.UserDetailsImpl;
+import first.webide.config.jwt.JwtTokenProvider;
 import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.dto.response.MemberResponse;
@@ -10,12 +11,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/members")
@@ -25,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "회원가입")
     @ApiResponses(value = {
@@ -45,15 +53,25 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = memberService.login(request);
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response) {
+        LoginResponse loginResponse = memberService.login(request);
+        String refreshToken = loginResponse.getRefreshToken();
 
-        String refreshToken = response.getRefreshToken();
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setMaxAge(3600);
-        return ResponseEntity.ok(response);
+        ResponseCookie refreshTokenCookie =
+                ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)             // 자바스크립트 접근 제한 (XSS 방지)
+                .secure(true)               // HTTPS 환경에서만 전송 보장
+                .path("/")                 // 쿠키 적용 경로
+                .maxAge(Duration.ofDays(7)) // 쿠키 만료 기간 7일 설정
+                .sameSite("None")           // CORS 상황에 따라 None, Lax, Strict 선택 가능
+                .build();
+
+        // Set-Cookie 헤더에 쿠키 추가
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body(loginResponse);
     }
 
     @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")
