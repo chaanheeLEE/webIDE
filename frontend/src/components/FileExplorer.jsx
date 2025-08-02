@@ -59,9 +59,15 @@ const getFileIcon = (fileName) => {
   }
 };
 
-const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode, fileTree }) => {
+const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode, onRenameNode, fileTree }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const isFolder = node.type === 'folder';
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(node.name);
+  
+  // 백엔드에서 오는 FileType enum 값들과 프론트엔드에서 생성하는 값들을 모두 처리
+  const isFolder = node.type === 'folder' || 
+                   node.type === 'directory' || 
+                   node.type === 'DIRECTORY';
   const isExpanded = isFolder && expandedFolders.has(node.id);
   const isSelected = activeFile && activeFile.id === node.id;
 
@@ -79,6 +85,36 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
     if (window.confirm(`Are you sure you want to delete "${node.name}"?`)) {
       onDeleteNode(path, node.id);
     }
+  };
+
+  // 프로젝트의 실제 루트 디렉토리인지 확인 (fileTree의 첫 번째 노드이면서 parentId가 없는 경우)
+  const isProjectRootDirectory = !node.parentId && Array.isArray(fileTree) && fileTree.length > 0 && fileTree[0].id === node.id;
+
+  const handleRenameClick = (e) => {
+    e.stopPropagation();
+    setIsRenaming(true);
+    setNewName(node.name);
+  };
+
+  const handleRenameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (newName.trim() && newName.trim() !== node.name) {
+        onRenameNode(path, node.id, newName.trim());
+      }
+      setIsRenaming(false);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsRenaming(false);
+      setNewName(node.name);
+    }
+  };
+
+  const handleRenameBlur = () => {
+    if (newName.trim() && newName.trim() !== node.name) {
+      onRenameNode(path, node.id, newName.trim());
+    }
+    setIsRenaming(false);
   };
 
   // --- Drag and Drop Handlers ---
@@ -115,36 +151,51 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
     e.preventDefault();
     e.stopPropagation();
     if (isFolder) {
-      const sourceId = e.dataTransfer.getData('application/node-id');
-      const sourceNode = findNodeById(fileTree, sourceId);
-      const targetNode = node;
-
-      // Prevent dropping a folder into itself or one of its own children
-      if (sourceId && sourceId !== targetNode.id && sourceNode && !isDescendant(sourceNode, targetNode)) {
-        setIsDragOver(true);
-      }
+      setIsDragOver(true);
     }
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
+    // 자식 요소로 이동하는 경우를 제외하고 dragOver 상태 해제
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOver(false);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-    if (isFolder) {
-      const sourceId = e.dataTransfer.getData('application/node-id');
-      const sourceNode = findNodeById(fileTree, sourceId);
-      const targetNode = node;
-
-      if (sourceId && sourceId !== targetNode.id && sourceNode && !isDescendant(sourceNode, targetNode)) {
-        onMoveNode(sourceId, targetNode.id);
-      }
+    
+    if (!isFolder) {
+      return;
     }
+
+    const sourceId = e.dataTransfer.getData('application/node-id');
+    
+    if (!sourceId) {
+      return;
+    }
+
+    const sourceNode = findNodeById(fileTree, sourceId);
+    const targetNode = node;
+
+    if (!sourceNode) {
+      return;
+    }
+
+    if (sourceId === targetNode.id) {
+      return;
+    }
+
+    if (isDescendant(sourceNode, targetNode)) {
+      return;
+    }
+
+    // 기본적인 이동 허용 - 복잡한 루트 체크는 일시적으로 제거
+    onMoveNode(sourceId, targetNode.id);
   };
 
   const nodeIcon = isFolder
@@ -156,17 +207,38 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
       <li
         className={`tree-node ${isSelected ? 'selected' : ''} ${isDragOver ? 'drag-over' : ''}`}
         onClick={handleNodeClick}
-        draggable={true}
+        draggable={!isRenaming && !isProjectRootDirectory}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <span className="node-icon">{nodeIcon}</span>
-        <span className="node-name">{node.name}</span>
-        <button className="delete-button" onClick={handleDeleteClick} title={`Delete ${node.name}`}>
-          <VscTrash />
-        </button>
+        {isRenaming ? (
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={handleRenameKeyDown}
+            onBlur={handleRenameBlur}
+            className="rename-input"
+            autoFocus
+          />
+        ) : (
+          <span className="node-name" onDoubleClick={handleRenameClick}>{node.name}</span>
+        )}
+        {!isRenaming && (
+          <div className="node-actions">
+            <button className="rename-button" onClick={handleRenameClick} title={`Rename ${node.name}`}>
+              ✏️
+            </button>
+            {!isProjectRootDirectory && (
+              <button className="delete-button" onClick={handleDeleteClick} title={`Delete ${node.name}`}>
+                <VscTrash />
+              </button>
+            )}
+          </div>
+        )}
       </li>
       {isExpanded && Array.isArray(node.children) && (
         <ul className="tree-children">
@@ -181,6 +253,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
               onFolderToggle={onFolderToggle}
               onDeleteNode={onDeleteNode}
               onMoveNode={onMoveNode}
+              onRenameNode={onRenameNode}
               fileTree={fileTree}
             />
           ))}
@@ -203,6 +276,7 @@ const FileExplorer = ({
   onCancelCreation,
   onDeleteNode,
   onMoveNode,
+  onRenameNode,
 }) => {
   return (
     <aside className="file-explorer">
@@ -230,10 +304,11 @@ const FileExplorer = ({
               onFolderToggle={onFolderToggle}
               onDeleteNode={onDeleteNode}
               onMoveNode={onMoveNode}
+              onRenameNode={onRenameNode}
               fileTree={fileTree}
             />
           ))}
-          {creatingNode && creatingNode.parentId === null && (
+          {creatingNode && Array.isArray(fileTree) && fileTree.length > 0 && creatingNode.parentId === fileTree[0].id && (
             <CreationInput 
               type={creatingNode.type}
               onFinalize={onFinalizeCreation}

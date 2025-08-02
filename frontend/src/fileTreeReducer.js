@@ -8,6 +8,7 @@ export const actionTypes = {
   ADD_NODE: 'ADD_NODE',
   REMOVE_NODE: 'REMOVE_NODE',
   MOVE_NODE: 'MOVE_NODE',
+  RENAME_NODE: 'RENAME_NODE',
   UPDATE_NODE_CONTENT: 'UPDATE_NODE_CONTENT',
   SET_EXPANDED_FOLDERS: 'SET_EXPANDED_FOLDERS',
 };
@@ -76,7 +77,13 @@ export function fileTreeReducer(state, action) {
       if (parentId) {
         newTree = addToTree(state.fileTree, parentId, newNode);
       } else {
-        newTree = [...state.fileTree, newNode];
+        // parentId가 없으면 루트 디렉토리 내부에 추가
+        if (state.fileTree.length > 0) {
+          const rootDirectory = state.fileTree[0];
+          newTree = addToTree(state.fileTree, rootDirectory.id, newNode);
+        } else {
+          newTree = [...state.fileTree, newNode];
+        }
       }
       return { ...state, fileTree: newTree, creatingNode: null };
     }
@@ -105,6 +112,7 @@ export function fileTreeReducer(state, action) {
         for (let i = 0; i < nodes.length; i++) {
           if (nodes[i].id === id) {
             sourceNode = nodes[i];
+            sourceNode.parentId = null; // parentId 초기화
             nodes.splice(i, 1);
             return true;
           }
@@ -116,9 +124,11 @@ export function fileTreeReducer(state, action) {
       };
 
       const findAndAdd = (nodes, id) => {
+        // 루트 디렉토리로 이동하는 경우 (destinationId가 루트 디렉토리의 ID인 경우)
         for (const node of nodes) {
-          if (node.id === id && node.type === 'folder') {
+          if (node.id === id && (node.type === 'folder' || node.type === 'directory' || node.type === 'DIRECTORY')) {
             node.children = node.children || [];
+            sourceNode.parentId = id; // parentId 업데이트
             node.children.push(sourceNode);
             return true;
           }
@@ -153,6 +163,26 @@ export function fileTreeReducer(state, action) {
       const newTree = updateNodeInTree(state.fileTree, fileId, newContent);
       const newActiveFile = state.activeFile && state.activeFile.id === fileId 
         ? { ...state.activeFile, content: newContent }
+        : state.activeFile;
+      return { ...state, fileTree: newTree, activeFile: newActiveFile };
+    }
+
+    case actionTypes.RENAME_NODE: {
+      const { nodeId, newName } = action.payload;
+      const renameNodeInTree = (nodes, id, name) => {
+        return nodes.map(node => {
+          if (node.id === id) {
+            return { ...node, name };
+          }
+          if (node.children) {
+            return { ...node, children: renameNodeInTree(node.children, id, name) };
+          }
+          return node;
+        });
+      };
+      const newTree = renameNodeInTree(state.fileTree, nodeId, newName);
+      const newActiveFile = state.activeFile && state.activeFile.id === nodeId 
+        ? { ...state.activeFile, name: newName }
         : state.activeFile;
       return { ...state, fileTree: newTree, activeFile: newActiveFile };
     }
