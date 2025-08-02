@@ -24,7 +24,7 @@ const Header = () => {
                 <Link to="/">ProjectHub</Link>
             </div>
             <nav className="navigation">
-                <Link to="/ide">IDE</Link>
+                <Link to="/ide">OPEN IDE</Link>
                 {isAuthenticated ? (
                     <>
                         <Link to="/mypage">My Page</Link>

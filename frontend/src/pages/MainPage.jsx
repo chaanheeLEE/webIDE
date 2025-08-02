@@ -1,7 +1,9 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FiPlus, FiBox, FiUsers, FiTrendingUp, FiShare2, FiStar, FiClock } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiPlus, FiBox, FiUsers, FiTrendingUp } from 'react-icons/fi';
 import Header from '../components/Header';
+import CreationInput from '../components/CreationInput'; // Assuming CreationInput is a modal component
+import axiosInstance from '../api/axiosInstance';
 import './MainPage.css';
 
 const ProjectCard = ({ icon, title, description }) => (
@@ -31,6 +33,57 @@ const HubProject = ({ team, title, description, progress, members }) => (
 
 
 const MainPage = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        setIsAuthenticated(!!token);
+    }, []);
+
+    const handleOpenModal = () => {
+        if (isAuthenticated) {
+            setIsModalOpen(true);
+        } else {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleCreateProject = async (name, description) => {
+        if (!name.trim()) {
+            alert('프로젝트 이름을 입력해주세요.');
+            return;
+        }
+        try {
+            const response = await axiosInstance.post('/api/v1/projects', {
+                projectName: name,
+                description: description,
+            });
+            alert('프로젝트가 성공적으로 생성되었습니다.');
+            setIsModalOpen(false);
+            navigate(`/ide/${response.data.projectId}`);
+        } catch (error) {
+            console.error('Error creating project:', error);
+            alert('프로젝트 생성에 실패했습니다.');
+        }
+    };
+
+    const handleMyProjectsClick = () => {
+        if (isAuthenticated) {
+            // Assuming there is a page for user's projects
+            navigate('/my-projects');
+        } else {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+        }
+    };
+
     return (
         <div className="main-page-container">
             <Header />
@@ -39,10 +92,10 @@ const MainPage = () => {
                     <h1>프로젝트 관리</h1>
                     <p>효율적인 프로젝트 관리로 팀의 생산성을 높이세요</p>
                     <div className="project-actions">
-                        <button className="primary-button">
+                        <button className="primary-button" onClick={handleOpenModal}>
                             <FiPlus /> 새 프로젝트 생성
                         </button>
-                        <button className="secondary-button">개인 프로젝트</button>
+                        <button className="secondary-button" onClick={handleMyProjectsClick}>개인 프로젝트</button>
                     </div>
                     <div className="project-cards-grid">
                         <ProjectCard icon={<FiBox />} title="빠른 시작" description="템플릿을 사용하여 몇 분 만에 프로젝트를 시작하세요" />
@@ -50,6 +103,17 @@ const MainPage = () => {
                         <ProjectCard icon={<FiTrendingUp />} title="진행 추적" description="프로젝트 진행 상황을 한눈에 파악하고 관리하세요" />
                     </div>
                 </section>
+                
+                {isModalOpen && (
+                    <CreationInput
+                        onClose={handleCloseModal}
+                        onCreate={handleCreateProject}
+                        title="새 프로젝트 생성"
+                        nameLabel="프로젝트 이름"
+                        descriptionLabel="프로젝트 설명"
+                        buttonText="생성"
+                    />
+                )}
 
                 <section className="project-hub">
                     <h2>프로젝트 허브</h2>
@@ -62,7 +126,7 @@ const MainPage = () => {
                     <div className="hub-projects-grid">
                         {/* Dummy Data */}
                         <HubProject team="마케팅 팀" title="웹사이트 리뉴얼" description="회사 웹사이트의 전면적인 리뉴얼 프로젝트입니다." progress={75} members={"👥"} />
-                        <HubProject team="개발 팀" title="모바일 앱 개발" description="iOS 및 Android 네이티브 앱 개발 프로젝트입니다." progress={30} members={"👥"} />
+                        <HubProject team="개발 팀" title="모바일 앱 개발" description="iOS 및 Android 네이ティブ 앱 개발 프로젝트입니다." progress={30} members={"👥"} />
                         <HubProject team="디자인 팀" title="브랜드 가이드라인" description="새로운 브랜드 아이덴티티 및 가이드라인 제작" progress={100} members={"👥"} />
                         <HubProject team="데이터 팀" title="데이터 분석 시스템" description="고객 데이터 분석을 위한 대시보드 구축 프로젝트" progress={60} members={"👥"} />
                         <HubProject team="고객 서비스 팀" title="고객 지원 시스템" description="효율적인 고객 지원을 위한 티켓팅 시스템 도입" progress={90} members={"👥"} />
