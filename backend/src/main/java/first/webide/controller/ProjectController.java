@@ -23,7 +23,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Project  API", description = "프로젝트 관리 API")
 public class ProjectController {
 

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/execute")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Code Execution", description = "코드 실행 API")
 public class CodeExecuteController {
     private final CodeExecuteService codeExecuteService;

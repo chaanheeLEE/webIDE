@@ -20,7 +20,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "File API", description = "파일 및 디렉토리 관리 API")
 public class FileController {
     private final FileService fileService;

@@ -27,12 +27,10 @@ import java.time.Duration;
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Member API", description = "사용자 회원가입 및 로그인 관리 API")
 public class MemberController {
 
     private final MemberService memberService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "회원가입")
     @ApiResponses(value = {
