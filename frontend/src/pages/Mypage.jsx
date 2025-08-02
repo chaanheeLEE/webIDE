@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import './Mypage.css';
-import jwtDecode from 'jwt-decode'; // Use a named import
+import {jwtDecode} from 'jwt-decode'; // Use a named import
 
 const Mypage = () => {
     const [currentUser, setCurrentUser] = useState({ email: '', username: '' });

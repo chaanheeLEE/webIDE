@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import Header from '../components/Header';
 import './LoginPage.css';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -17,11 +19,10 @@ const LoginPage = () => {
 
         setError('');
         setIsLoading(true);
-        try {
+        try { 
             const response = await axiosInstance.post('/members/login', { email, password });
-            const { accessToken, refreshToken } = response.data;
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
+            const { accessToken } = response.data;
+            login(accessToken);
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
             navigate('/');
         } catch (err) {
