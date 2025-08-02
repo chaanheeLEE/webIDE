@@ -1,10 +1,7 @@
 package first.webide.controller;
 
 import first.webide.config.auth.UserDetailsImpl;
-import first.webide.dto.request.ChangeUsernameRequest;
-import first.webide.dto.request.DeleteMemberRequest;
-import first.webide.dto.request.LoginRequest;
-import first.webide.dto.request.SignUpRequest;
+import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.dto.response.MemberResponse;
 import first.webide.service.MemberService;
@@ -12,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -49,6 +47,12 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = memberService.login(request);
+
+        String refreshToken = response.getRefreshToken();
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setMaxAge(3600);
         return ResponseEntity.ok(response);
     }
 
@@ -66,10 +70,6 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
-
     @Operation(summary = "사용자 이름 변경", description = "인증된 사용자의 이름을 변경합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이름 변경 성공"),
@@ -83,6 +83,21 @@ public class MemberController {
             @Valid @RequestBody ChangeUsernameRequest request) {
         MemberResponse response = memberService.changeUsername(userDetails.getUsername(), request);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "사용자 비밀번호 변경", description = "인증된 사용자의 비밀번호를 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "이미 사용중인 비밀번호")
+    })
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        memberService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "회원 탈퇴", description = "인증된 사용자가 자신의 계정을 삭제합니다.")

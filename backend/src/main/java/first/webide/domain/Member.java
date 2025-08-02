@@ -52,18 +52,19 @@ public class Member {
     }
 
     //== Business Logic ==//
+    public void changePassword(String oldPassword, String newPassword, PasswordEncoder passwordEncoder) {
+        verifyPassword(oldPassword, passwordEncoder);
+        this.password = passwordEncoder.encode(newPassword);
+    }
+
     public void verifyPassword(String rawPassword, PasswordEncoder passwordEncoder) {
         if (!passwordEncoder.matches(rawPassword, this.password)) {
-            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
     }
 
     public void changeUsername(String newUsername) {
         this.username = newUsername;
-    }
-
-    public void changePassword(String newRawPassword, PasswordEncoder passwordEncoder) {
-        this.password = passwordEncoder.encode(newRawPassword);
     }
 
     public void withdraw(String rawPassword, PasswordEncoder passwordEncoder) {

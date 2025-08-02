@@ -2,10 +2,7 @@ package first.webide.service;
 
 import first.webide.domain.Member;
 import first.webide.domain.RefreshToken;
-import first.webide.dto.request.ChangeUsernameRequest;
-import first.webide.dto.request.DeleteMemberRequest;
-import first.webide.dto.request.LoginRequest;
-import first.webide.dto.request.SignUpRequest;
+import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.exception.BusinessException;
 import first.webide.repository.MemberRepository;
@@ -15,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +30,9 @@ class MemberServiceTest {
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @AfterEach
     void tearDown() {
@@ -165,6 +166,26 @@ class MemberServiceTest {
         // then
         Member member = memberRepository.findByEmail("test@test.com").get();
         assertThat(member.getUsername()).isEqualTo(newUsername);
+    }
+
+    @DisplayName("사용자 비밀번호 변경에 성공한다.")
+    @Test
+    void changePassword() {
+        // given
+        SignUpRequest signUpRequest = new SignUpRequest(
+                "test@test.com", "password1234", "tester");
+        memberService.signUp(signUpRequest);
+
+        ChangePasswordRequest request = new ChangePasswordRequest(
+                signUpRequest.getPassword(), "newPassword123");
+
+        // when
+        memberService.changePassword("test@test.com", request);
+
+        // then
+        Member member = memberRepository.findByEmail("test@test.com").get();
+        boolean matches = passwordEncoder.matches("newPassword123", member.getPassword());
+        assertThat(matches).isTrue();
     }
 
     @DisplayName("이미 존재하는 이름으로 변경 시 예외가 발생한다.")

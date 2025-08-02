@@ -4,10 +4,7 @@ import first.webide.config.auth.UserDetailsImpl;
 import first.webide.config.jwt.JwtTokenProvider;
 import first.webide.domain.Member;
 import first.webide.domain.RefreshToken;
-import first.webide.dto.request.ChangeUsernameRequest;
-import first.webide.dto.request.DeleteMemberRequest;
-import first.webide.dto.request.LoginRequest;
-import first.webide.dto.request.SignUpRequest;
+import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.dto.response.MemberResponse;
 import first.webide.exception.BusinessException;
@@ -130,6 +127,18 @@ public class MemberServiceImpl implements MemberService {
 
         member.changeUsername(request.getNewUsername());
         return MemberResponse.from(member);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request){
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new  BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        member.changePassword(request.getOldPassword(), request.getNewPassword(), passwordEncoder);
     }
 
     @Override

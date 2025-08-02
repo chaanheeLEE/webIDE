@@ -1,9 +1,6 @@
 package first.webide.service;
 
-import first.webide.dto.request.ChangeUsernameRequest;
-import first.webide.dto.request.DeleteMemberRequest;
-import first.webide.dto.request.LoginRequest;
-import first.webide.dto.request.SignUpRequest;
+import first.webide.dto.request.Member.*;
 import first.webide.dto.response.LoginResponse;
 import first.webide.dto.response.MemberResponse;
 
@@ -12,5 +9,6 @@ public interface MemberService {
     LoginResponse login(LoginRequest request);
     LoginResponse reissueToken(String refreshToken);
     MemberResponse changeUsername(String email, ChangeUsernameRequest request);
+    void changePassword(String email, ChangePasswordRequest request);
     void deleteMember(String email, DeleteMemberRequest request);
 }
