@@ -13,9 +13,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', token);
     };
 
-    const logout = () => {
+    const logout = (showMessage = false) => {
         setAccessToken(null);
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        
+        if (showMessage) {
+            alert('로그아웃되었습니다.');
+        }
     };
 
     const isAuthenticated = !!accessToken;

@@ -93,3 +93,45 @@
     color: #ff4d4d;
     border-color: #ff4d4d;
 }
+
+/* IDE Header specific styles */
+.ide-header {
+    background-color: #252526;
+    color: #cccccc;
+}
+
+.ide-controls {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.run-button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.run-button:hover {
+    background-color: #45a049;
+}
+
+.run-button:active {
+    transform: scale(0.98);
+}
+
+.run-button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}

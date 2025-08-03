@@ -4,7 +4,7 @@ import axiosInstance from '../api/axiosInstance';
 import './Header.css';
 import { useAuth } from '../context/AuthContext';
 
-const Header = () => {
+const Header = ({ onRunCode, isRunning, isRunDisabled = false }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { isAuthenticated, logout } = useAuth();
@@ -22,15 +22,27 @@ const Header = () => {
     };
 
     // Determine if the header should be for the main site or the IDE
-    const isIdeMode = location.pathname.startsWith('/ide');
+    const isIdeMode = location.pathname.startsWith('/ide') || location.pathname.startsWith('/demo-ide');
 
     return (
         <header className={`app-header ${isIdeMode ? 'ide-header' : 'main-header'}`}>
             <div className="logo">
                 <Link to="/">ProjectHub</Link>
             </div>
+            {isIdeMode && (
+                <div className="ide-controls">
+                    <button 
+                        onClick={onRunCode} 
+                        className="run-button" 
+                        disabled={isRunning || isRunDisabled}
+                        title={isRunDisabled ? "현재 언어는 실행할 수 없습니다" : ""}
+                    >
+                        {isRunning ? '실행 중...' : 'Run'}
+                    </button>
+                </div>
+            )}
             <nav className="navigation">
-                <Link to="/ide">OPEN IDE</Link>
+                {!isIdeMode && <Link to="/demo-ide">OPEN IDE</Link>}
                 {isAuthenticated ? (
                     <>
                         <Link to="/mypage">My Page</Link>

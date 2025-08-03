@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import ProjectCreationModal from '../components/ProjectCreationModal';
 import { getPublicProjects, createProject } from '../api/projectApi';
 import { useAuth } from '../context/AuthContext';
+import { handleApiError } from '../utils/errorHandler';
 import './MainPage.css';
 
 const ProjectCard = ({ icon, title, description }) => (
@@ -18,17 +19,10 @@ const ProjectCard = ({ icon, title, description }) => (
 const HubProject = ({ project, onClick }) => (
     <div className="hub-project-card" onClick={() => onClick(project.id)}>
         <div className="hub-project-header">
-            <span className="team-name">{project.ownerNickname || 'Unknown Team'}</span>
+            <span className="team-name">owner : {project.ownerUsername}</span>
             <h4>{project.name}</h4>
         </div>
         <p className="hub-project-description">{project.description}</p>
-        <div className="hub-project-footer">
-            <div className="progress-bar">
-                <div style={{ width: `0%` }}></div> {/* Progress data is not available */}
-            </div>
-            <span className="progress-text">0%</span>
-            <div className="member-avatars">👥</div>
-        </div>
     </div>
 );
 
@@ -40,7 +34,7 @@ const MainPage = () => {
     const [loadingProjects, setLoadingProjects] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
 
     useEffect(() => {
         if (location.state?.openCreationModal && isAuthenticated) {
@@ -96,18 +90,7 @@ const MainPage = () => {
         } catch (error) {
             console.error('Error creating project:', error);
             
-            let errorMessage = '프로젝트 생성에 실패했습니다.';
-            
-            if (error.status === 401 || error.status === 403) {
-                errorMessage = '로그인이 필요하거나 권한이 없습니다. 다시 로그인해주세요.';
-            } else if (error.status === 500) {
-                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-            } else if (error.status === 0) {
-                errorMessage = '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.';
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-            
+            const errorMessage = handleApiError(error, logout, navigate);
             alert(errorMessage);
         } finally {
             setIsCreating(false);
@@ -147,9 +130,9 @@ const MainPage = () => {
                         <button className="secondary-button" onClick={handleMyProjectsClick}>개인 프로젝트</button>
                     </div>
                     <div className="project-cards-grid">
-                        <ProjectCard icon={<FiBox />} title="빠른 시작" description="템플릿을 사용하여 몇 분 만에 프로젝트를 시작하세요" />
-                        <ProjectCard icon={<FiUsers />} title="팀 협업" description="실시간으로 팀원들과 함께 작업하고 소통하세요" />
-                        <ProjectCard icon={<FiTrendingUp />} title="진행 추적" description="프로젝트 진행 상황을 한눈에 파악하고 관리하세요" />
+                        <ProjectCard icon={<FiBox />} title="빠른 시작" description="로그인 하여 새 프로젝트를 시작하세요" />
+                        <ProjectCard icon={<FiUsers />} title="팀 협업 (개발 예정)" description="실시간으로 팀원들과 함께 작업하고 소통하세요" />
+                        <ProjectCard icon={<FiTrendingUp />} title="프로젝트 관리 및 공유" description="개인 프로젝트 탭에서 프로젝트를 관리 및 공유하세요" />
                     </div>
                 </section>
                 
@@ -166,7 +149,18 @@ const MainPage = () => {
                         <button className="filter-active">공유된 프로젝트</button>
                     </div>
                     <div className="hub-projects-grid">
-                        {loadingProjects ? (
+                        {!isAuthenticated ? (
+                            <div className="login-required-message">
+                                <h3>로그인이 필요합니다</h3>
+                                <p>공유된 프로젝트를 보려면 로그인해주세요.</p>
+                                <button 
+                                    className="primary-button" 
+                                    onClick={() => navigate('/login')}
+                                >
+                                    로그인하기
+                                </button>
+                            </div>
+                        ) : loadingProjects ? (
                             <p>프로젝트를 불러오는 중...</p>
                         ) : publicProjects.length > 0 ? (
                             publicProjects.map(project => (
