@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +41,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = Project.createProject(
                 request.getProjectName(),
                 request.getDescription(),
-                member.getId());
+                member);
         Project savedProject = projectRepository.save(project);
 
         FileNode rootDir = FileNode.createRootDirectory(savedProject.getName());
@@ -56,7 +54,7 @@ public class ProjectServiceImpl implements ProjectService {
     public List<ProjectResponse> getProjectsByMemberEmail(String memberEmail) {
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-        List<Project> projects = projectRepository.findAllByMemberId(member.getId());
+        List<Project> projects = projectRepository.findAllByMember(member);
         return projects.stream()
                 .map(ProjectResponse::from)
                 .collect(Collectors.toList());
@@ -67,8 +65,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
         
-        Member owner = memberRepository.findById(project.getMemberId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member owner = project.getMember();
         
         return ProjectResponse.from(project, owner.getEmail());
     }
@@ -101,20 +98,8 @@ public class ProjectServiceImpl implements ProjectService {
     public Page<ProjectHubResponse> getPublicProjects(Pageable pageable) {
         Page<Project> publicProjects = projectRepository.findAllByIsPublic(true, pageable);
 
-        // 사용자 정보를 한 번에 조회
-        List<Long> ownerIds = publicProjects.getContent().stream()
-                .map(Project::getMemberId)
-                .distinct()
-                .toList();
-
-        Map<Long, Member> ownersMap = memberRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(Member::getId, Function.identity()));
-
         return publicProjects.map(project -> {
-            Member owner = ownersMap.get(project.getMemberId());
-            if (owner == null) {
-                throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-            }
+            Member owner = project.getMember();
             return new ProjectHubResponse(project, owner);
         });
     }
@@ -172,7 +157,7 @@ public class ProjectServiceImpl implements ProjectService {
     private Project getProjectAndCheckOwnership(Long memberId, Long projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
-        if (!project.getMemberId().equals(memberId)) {
+        if (!project.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
         }
         return project;

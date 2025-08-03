@@ -144,7 +144,7 @@ public class MemberController {
             @ApiResponse(responseCode = "401", description = "인증 실패 또는 비밀번호 불일치"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @DeleteMapping
+    @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMember(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @Valid @RequestBody DeleteMemberRequest request) {

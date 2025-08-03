@@ -28,8 +28,9 @@ public class Project {
 
     private String description;
 
-    @Column(nullable = false)
-    private Long memberId; // Member  ID만 참조
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(nullable = true) // 프로젝트 생성 후 루트 디렉토리가 설정되므로 nullable
     private Long rootDirId; // FileNode  ID만 참조
@@ -46,18 +47,18 @@ public class Project {
 
 
     @Builder
-    public Project(String name, String description, Long memberId, boolean isPublic) {
+    public Project(String name, String description, Member member, boolean isPublic) {
         this.name = name;
         this.description = description;
-        this.memberId = memberId;
+        this.member = member;
         this.isPublic = isPublic;
     }
 
-    public static Project createProject(String name, String description, Long memberId) {
+    public static Project createProject(String name, String description, Member member) {
         return Project.builder()
                 .name(name)
                 .description(description)
-                .memberId(memberId)
+                .member(member)
                 .isPublic(false)  // 명시적으로 비공개로 시작
                 .build();
     }

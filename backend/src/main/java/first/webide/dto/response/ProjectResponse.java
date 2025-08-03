@@ -27,7 +27,7 @@ public class ProjectResponse {
                 .name(project.getName())
                 .description(project.getDescription())
                 .isPublic(project.isPublic())
-                .memberId(project.getMemberId())
+                .memberId(project.getMember().getId())
                 .memberEmail(null) // 기본값, 서비스에서 설정
                 .rootDirId(project.getRootDirId())
                 .createdAt(project.getCreatedAt())
@@ -41,7 +41,7 @@ public class ProjectResponse {
                 .name(project.getName())
                 .description(project.getDescription())
                 .isPublic(project.isPublic())
-                .memberId(project.getMemberId())
+                .memberId(project.getMember().getId())
                 .memberEmail(memberEmail)
                 .rootDirId(project.getRootDirId())
                 .createdAt(project.getCreatedAt())
