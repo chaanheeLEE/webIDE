@@ -1,0 +1,72 @@
+.output-console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.console-tabs {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid #333;
+}
+
+.tab-item {
+  background: none;
+  border: none;
+  color: #8e8e8e;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-item:hover {
+  color: #d4d4d4;
+}
+
+.tab-item.active {
+  color: #ffffff;
+  border-bottom-color: #007acc;
+}
+
+.console-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.output-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.input-area span {
+  margin-right: 8px;
+  color: #007acc;
+}
+
+.input-area input {
+  flex-grow: 1;
+  background: none;
+  border: none;
+  color: #d4d4d4;
+  outline: none;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+}

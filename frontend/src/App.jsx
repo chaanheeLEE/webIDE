@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import MainPage from './pages/MainPage';
+import IdePage from './pages/ide/IdePage';
+import DemoIdePage from './pages/DemoIdePage';
+import LoginPage from './pages/LoginPage';
+import Mypage from './pages/Mypage';
+import SignUpPage from './pages/SignUpPage';
+import MyProjectsPage from './pages/MyProjectsPage';
+import './index.css';
+import { useAuth } from './context/AuthContext';
+import setupInterceptors from './api/setupInterceptors';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+    const { isAuthenticated, login, logout } = useAuth();
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    useEffect(() => {
+        setupInterceptors({ login, logout });
+    }, [login, logout]);
 
-export default App
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<MainPage />} />
+                <Route path="/demo-ide" element={<DemoIdePage />} />
+                <Route path="/ide" element={<IdePage />} />
+                <Route path="/ide/:projectId" element={<IdePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route
+                    path="/my-projects"
+                    element={isAuthenticated ? <MyProjectsPage /> : <Navigate to="/login" />}
+                />
+                <Route
+                    path="/mypage"
+                    element={isAuthenticated ? <Mypage /> : <Navigate to="/login" />}
+                />
+            </Routes>
+        </Router>
+    );
+};
+
+export default App;

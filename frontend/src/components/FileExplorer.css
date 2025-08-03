@@ -1,0 +1,208 @@
+.file-explorer {
+  width: 100%;
+  height: 100%;
+  background-color: #252526;
+  color: #cccccc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-size: 14px;
+}
+
+.explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.explorer-header h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-actions button {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.file-explorer:hover .header-actions button {
+  opacity: 0.7; /* Visible on explorer hover */
+}
+
+.header-actions button:hover {
+  opacity: 1;
+  background-color: #37373d;
+}
+
+
+.explorer-content {
+  padding: 2px 0;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.tree-root,
+.tree-children {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tree-children {
+  padding-left: 20px; /* Indentation for nested items */
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s ease-in-out;
+  white-space: nowrap;
+  position: relative; /* For positioning the delete button */
+}
+
+.tree-node:hover {
+  background-color: #2a2d2e;
+}
+
+.tree-node.selected {
+  background-color: #37373d;
+  color: #ffffff;
+}
+
+.tree-node.drag-over {
+  background-color: #04395e;
+  outline: 1px solid #007acc;
+}
+
+.node-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  font-size: 1.1em;
+}
+
+.node-name {
+  line-height: 1.5;
+  flex-grow: 1; /* Allow name to take up space */
+}
+
+.delete-button {
+  display: none; /* Hidden by default */
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 1em;
+}
+
+.tree-node:hover .delete-button {
+  display: inline-flex; /* Show on hover */
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background-color: #37373d;
+  color: #ffffff;
+}
+
+/* Creation Input Styles */
+.creation-node {
+  padding-left: 10px;
+}
+
+.creation-node form {
+  width: 100%;
+}
+
+.creation-input {
+  background-color: #3c3c3c;
+  border: 1px solid #3c3c3c;
+  color: #cccccc;
+  width: calc(100% - 10px);
+  padding: 3px 4px;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.creation-input:focus {
+  border-color: #007acc;
+  outline: 1px solid #007acc;
+}
+
+/* Node Actions Container */
+.node-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.tree-node:hover .node-actions {
+  display: flex;
+}
+
+/* Rename Input Styles */
+.rename-input {
+  background-color: #3c3c3c;
+  border: 1px solid #007acc;
+  color: #cccccc;
+  padding: 2px 4px;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 2px;
+}
+
+.rename-input:focus {
+  border-color: #007acc;
+  box-shadow: 0 0 3px rgba(0, 122, 204, 0.5);
+}
+
+/* Rename Button */
+.rename-button {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  opacity: 0.7;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.rename-button:hover {
+  background-color: #37373d;
+  opacity: 1;
+}

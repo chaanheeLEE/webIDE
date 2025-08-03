@@ -1,0 +1,137 @@
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    height: 60px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Styles for the main dashboard header */
+.main-header {
+    background-color: white;
+    color: #212529;
+}
+
+/* Styles for the IDE header */
+.ide-header {
+    background-color: #202124;
+    color: white;
+    border-bottom: 1px solid #333;
+}
+
+.logo a {
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.main-header .logo a {
+    color: #212529;
+}
+
+.ide-header .logo a {
+    color: white;
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navigation a {
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.main-header .navigation a {
+    color: #495057;
+}
+
+.main-header .navigation a:hover {
+    background-color: #f1f3f5;
+}
+
+.ide-header .navigation a {
+    color: #ccc;
+}
+
+.ide-header .navigation a:hover {
+    color: white;
+    background-color: #3c4043;
+}
+
+.login-button, .signup-button, .logout-button {
+    border: 1px solid;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.login-button {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.signup-button {
+    background-color: transparent;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.logout-button {
+    background: none;
+    margin-left: 0.5rem;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.ide-header .logout-button {
+    color: #ff4d4d;
+    border-color: #ff4d4d;
+}
+
+/* IDE Header specific styles */
+.ide-header {
+    background-color: #252526;
+    color: #cccccc;
+}
+
+.ide-controls {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.run-button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.run-button:hover {
+    background-color: #45a049;
+}
+
+.run-button:active {
+    transform: scale(0.98);
+}
+
+.run-button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
