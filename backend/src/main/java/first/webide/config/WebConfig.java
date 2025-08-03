@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .maxAge(86400);
                 
-        registry.addMapping("/v3/api-docs/**")
+        registry.addMapping("/api-docs/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET")
                 .allowedHeaders("*")
