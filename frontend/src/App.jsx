@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import IdePage from './pages/ide/IdePage';
+import DemoIdePage from './pages/DemoIdePage';
 import LoginPage from './pages/LoginPage';
 import Mypage from './pages/Mypage';
 import SignUpPage from './pages/SignUpPage';
@@ -21,6 +22,7 @@ const App = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<MainPage />} />
+                <Route path="/demo-ide" element={<DemoIdePage />} />
                 <Route path="/ide" element={<IdePage />} />
                 <Route path="/ide/:projectId" element={<IdePage />} />
                 <Route path="/login" element={<LoginPage />} />
