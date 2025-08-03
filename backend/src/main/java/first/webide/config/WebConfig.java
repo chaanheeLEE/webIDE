@@ -13,11 +13,25 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // API 경로에만 적용
-                .allowedOrigins(allowedOrigins) // 환경변수로 관리되는 허용 도메인
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") // RESTful 메소드 모두 허용
-                .allowedHeaders("*") // 모든 헤더 허용
-                .allowCredentials(true) // 쿠키/인증정보 포함 허용
-                .maxAge(86400); // Preflight 응답 캐시 시간 24시간
+        // API 경로에 대한 CORS 설정
+        registry.addMapping("/api/**")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(86400);
+        
+        // Swagger 경로에 대한 CORS 설정
+        registry.addMapping("/swagger-ui/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .maxAge(86400);
+                
+        registry.addMapping("/v3/api-docs/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET")
+                .allowedHeaders("*")
+                .maxAge(86400);
     }
 }
