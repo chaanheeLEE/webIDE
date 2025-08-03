@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiEdit3, FiTrash2, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
+import { FiEdit3, FiTrash2, FiEye, FiEyeOff, FiCalendar, FiArrowRight } from 'react-icons/fi';
 import Header from '../components/Header';
-import { getMyProjects, deleteProject, updateProjectPublishStatus } from '../api/projectApi';
+import ProjectEditModal from '../components/ProjectEditModal';
+import { getMyProjects, deleteProject, updateProjectPublishStatus, updateProject } from '../api/projectApi';
 import { useAuth } from '../context/AuthContext';
 import './MyProjectsPage.css';
 
@@ -68,6 +69,13 @@ const ProjectCard = ({ project, onEdit, onDelete }) => {
         </div>
       </div>
       <p className="project-description">{project.description || '설명이 없습니다.'}</p>
+      
+      <div className="project-card-actions">
+        <button className="open-ide-btn" onClick={handleOpenProject}>
+          IDE에서 열기 <FiArrowRight />
+        </button>
+      </div>
+
       <div className="project-footer">
         <span className="project-date">
           <FiCalendar />
@@ -85,6 +93,9 @@ const MyProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -109,10 +120,34 @@ const MyProjectsPage = () => {
     }
   };
 
-  const handleEditProject = (project) => {
-    // 프로젝트 편집 모달이나 페이지로 이동
-    // 현재는 IDE 페이지로 이동
-    navigate(`/ide/${project.id}`);
+  const handleOpenEditModal = (project) => {
+    setEditingProject(project);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingProject(null);
+  };
+
+  const handleUpdateProject = async (updateData) => {
+    if (!editingProject) return;
+
+    setIsUpdating(true);
+    try {
+      const updatedProject = await updateProject(editingProject.id, {
+        name: updateData.name,
+        description: updateData.description,
+      });
+      setProjects(projects.map(p => p.id === editingProject.id ? updatedProject : p));
+      handleCloseEditModal();
+      alert('프로젝트 정보가 성공적으로 수정되었습니다.');
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      alert('프로젝트 정보 수정에 실패했습니다.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleDeleteProject = async (projectId) => {
@@ -127,15 +162,6 @@ const MyProjectsPage = () => {
     } catch (error) {
       console.error('Failed to delete project:', error);
       alert('프로젝트 삭제에 실패했습니다.');
-    }
-  };
-
-  const handleTogglePublish = async (projectId, isPublished) => {
-    try {
-      await updateProjectPublishStatus(projectId, { isPublished });
-      // 상태는 ProjectCard에서 관리됨
-    } catch (error) {
-      throw error; // ProjectCard에서 처리
     }
   };
 
@@ -181,13 +207,20 @@ const MyProjectsPage = () => {
               <ProjectCard
                 key={project.id}
                 project={project}
-                onEdit={handleEditProject}
+                onEdit={handleOpenEditModal}
                 onDelete={handleDeleteProject}
               />
             ))}
           </div>
         )}
       </main>
+      <ProjectEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleUpdateProject}
+        project={editingProject}
+        isLoading={isUpdating}
+      />
     </div>
   );
 };
