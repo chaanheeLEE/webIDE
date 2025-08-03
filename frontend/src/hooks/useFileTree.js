@@ -5,13 +5,6 @@ import { createFile, createDirectory, deleteNode, moveNode, renameNode, updateFi
 import { getMemberInfo } from '../api/memberApi';
 import { getProjectDetails } from '../api/projectApi';
 
-export const useFileTree = (projectId) => {
-    const [state, dispatch] = useReducer(fileTreeReducer, initialState);
-    const { fileTree, activeFile, expandedFolders, creatingNode } = state; useReducer, useEffect, useCallback } from 'react';
-import axiosInstance from '../api/axiosInstance';
-import { fileTreeReducer, initialState, actionTypes } from '../fileTreeReducer';
-import { createFile, createDirectory, deleteNode, moveNode, renameNode, updateFileContent } from '../api/fileApi';
-
 export const useFileTree = (projectId, isReadOnly = false) => {
     const [state, dispatch] = useReducer(fileTreeReducer, initialState);
     const { fileTree, activeFile, expandedFolders, creatingNode } = state;
