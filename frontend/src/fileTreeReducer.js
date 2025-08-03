@@ -1,6 +1,7 @@
 // Action Types
 export const actionTypes = {
   SET_TREE: 'SET_TREE',
+  SAVE_TREE: 'SAVE_TREE', // 파일 트리 저장을 위한 액션 타입 추가
   SET_ACTIVE_FILE: 'SET_ACTIVE_FILE',
   TOGGLE_FOLDER: 'TOGGLE_FOLDER',
   INITIATE_CREATION: 'INITIATE_CREATION',
@@ -26,6 +27,11 @@ export function fileTreeReducer(state, action) {
   switch (action.type) {
     case actionTypes.SET_TREE:
       return { ...state, fileTree: action.payload };
+
+    case actionTypes.SAVE_TREE:
+      // This action doesn't change the state directly.
+      // It can be used by middleware to trigger side effects like saving the tree to a server.
+      return state;
 
     case actionTypes.SET_ACTIVE_FILE:
       return { ...state, activeFile: action.payload };

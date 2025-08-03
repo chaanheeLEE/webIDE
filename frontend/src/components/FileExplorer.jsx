@@ -59,7 +59,7 @@ const getFileIcon = (fileName) => {
   }
 };
 
-const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode, onRenameNode, fileTree }) => {
+const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFolderToggle, onDeleteNode, onMoveNode, onRenameNode, fileTree, isReadOnly }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(node.name);
@@ -207,11 +207,11 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
       <li
         className={`tree-node ${isSelected ? 'selected' : ''} ${isDragOver ? 'drag-over' : ''}`}
         onClick={handleNodeClick}
-        draggable={!isRenaming && !isProjectRootDirectory}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        draggable={!isRenaming && !isProjectRootDirectory && !isReadOnly}
+        onDragStart={!isReadOnly ? handleDragStart : undefined}
+        onDragOver={!isReadOnly ? handleDragOver : undefined}
+        onDragLeave={!isReadOnly ? handleDragLeave : undefined}
+        onDrop={!isReadOnly ? handleDrop : undefined}
       >
         <span className="node-icon">{nodeIcon}</span>
         {isRenaming ? (
@@ -225,9 +225,9 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
             autoFocus
           />
         ) : (
-          <span className="node-name" onDoubleClick={handleRenameClick}>{node.name}</span>
+          <span className="node-name" onDoubleClick={!isReadOnly ? handleRenameClick : undefined}>{node.name}</span>
         )}
-        {!isRenaming && (
+        {!isRenaming && !isReadOnly && (
           <div className="node-actions">
             <button className="rename-button" onClick={handleRenameClick} title={`Rename ${node.name}`}>
               ✏️
@@ -255,6 +255,7 @@ const TreeNode = ({ node, path, activeFile, expandedFolders, onFileSelect, onFol
               onMoveNode={onMoveNode}
               onRenameNode={onRenameNode}
               fileTree={fileTree}
+              isReadOnly={isReadOnly}
             />
           ))}
         </ul>
@@ -277,19 +278,22 @@ const FileExplorer = ({
   onDeleteNode,
   onMoveNode,
   onRenameNode,
+  isReadOnly = false,
 }) => {
   return (
     <aside className="file-explorer">
       <div className="explorer-header">
         <h3>Explorer</h3>
-        <div className="header-actions">
-          <button onClick={() => onInitiateCreation('file')} title="New File">
-            <VscNewFile />
-          </button>
-          <button onClick={() => onInitiateCreation('folder')} title="New Folder">
-            <VscNewFolder />
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="header-actions">
+            <button onClick={() => onInitiateCreation('file')} title="New File">
+              <VscNewFile />
+            </button>
+            <button onClick={() => onInitiateCreation('folder')} title="New Folder">
+              <VscNewFolder />
+            </button>
+          </div>
+        )}
       </div>
       <div className="explorer-content">
         <ul className="tree-root">
@@ -306,9 +310,10 @@ const FileExplorer = ({
               onMoveNode={onMoveNode}
               onRenameNode={onRenameNode}
               fileTree={fileTree}
+              isReadOnly={isReadOnly}
             />
           ))}
-          {creatingNode && Array.isArray(fileTree) && fileTree.length > 0 && creatingNode.parentId === fileTree[0].id && (
+          {creatingNode && !isReadOnly && Array.isArray(fileTree) && fileTree.length > 0 && creatingNode.parentId === fileTree[0].id && (
             <CreationInput 
               type={creatingNode.type}
               onFinalize={onFinalizeCreation}
