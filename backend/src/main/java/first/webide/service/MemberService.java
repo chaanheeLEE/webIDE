@@ -9,6 +9,7 @@ public interface MemberService {
     LoginResponse login(LoginRequest request);
     void logout(String email);
     LoginResponse reissueToken(String refreshToken);
+    MemberResponse getMemberInfo(String email);
     MemberResponse changeUsername(String email, ChangeUsernameRequest request);
     void changePassword(String email, ChangePasswordRequest request);
     void deleteMember(String email, DeleteMemberRequest request);

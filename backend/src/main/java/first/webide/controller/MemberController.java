@@ -100,6 +100,14 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "회원 정보 조회")
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponse> getInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String email = userDetails.getUsername();
+        MemberResponse response = memberService.getMemberInfo(email);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "사용자 이름 변경", description = "인증된 사용자의 이름을 변경합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "이름 변경 성공"),
@@ -107,7 +115,7 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "이미 사용중인 이름")
     })
-    @PatchMapping("/username")
+    @PatchMapping("/me/username")
     public ResponseEntity<MemberResponse> changeUsername(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @Valid @RequestBody ChangeUsernameRequest request) {
@@ -122,7 +130,7 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "이미 사용중인 비밀번호")
     })
-    @PatchMapping("/password")
+    @PatchMapping("/me/password")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {

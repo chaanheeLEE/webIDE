@@ -119,6 +119,12 @@ public class MemberServiceImpl implements MemberService {
         return new LoginResponse("Bearer", newAccessToken, refreshTokenValue);
     }
 
+    @Override
+    public MemberResponse getMemberInfo(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return MemberResponse.from(member);
+    }
 
     @Override
     @Transactional
