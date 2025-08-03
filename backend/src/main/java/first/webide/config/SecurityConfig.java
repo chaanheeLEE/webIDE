@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS 요청 허용
                         .requestMatchers("/api/members/signup", "/api/members/login", "/api/members/logout", "/api/members/refresh").permitAll() // 회원가입, 로그인, 토큰 재발급은 허용
+                        .requestMatchers("/api/execute").permitAll() // 코드 실행은 체험용으로 허용
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Swagger 관련 경로 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )

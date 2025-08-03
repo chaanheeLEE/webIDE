@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import Editor from '../components/Editor';
 import OutputConsole from '../components/OutputConsole';
 import { getLanguageForFile, SUPPORTED_LANGUAGES } from '../languages';
-import { executeCode } from '../api/codeExecuteApi';
+import { executeDemoCode } from '../api/codeExecuteApi';
 import HELLO_WORLD_SNIPPETS from '../helloWorldSnippets';
 import './DemoIdePage.css';
 
@@ -76,7 +76,7 @@ const DemoIdePage = () => {
             
             console.log('Executing code with data:', requestData);
             
-            const result = await executeCode(requestData);
+            const result = await executeDemoCode(requestData);
             
             setOutput(result.output || JSON.stringify(result, null, 2));
         } catch (error) {

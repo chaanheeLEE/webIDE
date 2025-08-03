@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import axios from 'axios';
 
 /**
  * 코드 실행 API
@@ -14,6 +15,32 @@ import axiosInstance from './axiosInstance';
 export const executeCode = async (data) => {
   try {
     const response = await axiosInstance.post('/execute', data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * 체험용 코드 실행 API (인증 없이 실행)
+ * @param {Object} data - 코드 실행 데이터
+ * @param {string} data.language - 실행할 언어 (예: "java", "python", "javascript")
+ * @param {string} data.code - 실행할 코드
+ * @param {string} data.filename - 파일 이름 (선택사항)
+ * @param {string} data.version - 언어 버전 (선택사항)
+ * @param {Array<string>} data.args - 실행 인자 (선택사항)
+ * @param {string} data.input - 입력 데이터 (선택사항)
+ * @returns {Promise<Object>} 코드 실행 결과
+ */
+export const executeDemoCode = async (data) => {
+  try {
+    // 인증 토큰 없이 직접 axios 사용
+    const response = await axios.post('http://localhost:8080/api/execute', data, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
