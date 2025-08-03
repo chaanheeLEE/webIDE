@@ -1,84 +1,99 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../api/axiosInstance';
+import { getMemberInfo, updateUsername, updatePassword } from '../api/memberApi';
+import { useAuth } from '../context/AuthContext';
+import { handleApiError } from '../utils/errorHandler';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import './Mypage.css';
-import {jwtDecode} from 'jwt-decode'; // Use a named import
 
 const Mypage = () => {
     const [currentUser, setCurrentUser] = useState({ email: '', username: '' });
     const [newUsername, setNewUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
+        const fetchUserInfo = async () => {
             try {
-                const decoded = jwtDecode(token);
-                setCurrentUser({ email: decoded.sub, username: decoded.username });
-            } catch (e) {
-                console.error("Invalid token", e);
-                setError("Invalid session. Please log in again.");
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                delete axiosInstance.defaults.headers.common['Authorization'];
-                window.location.href = '/login'; // 강제 로그인 페이지 이동
+                const userInfo = await getMemberInfo();
+                setCurrentUser(userInfo);
+                setNewUsername(userInfo.username);
+            } catch (err) {
+                handleApiError(err, logout, navigate);
             }
-        }
-    }, []);
+        };
+        fetchUserInfo();
+    }, [logout, navigate]);
 
     const handleChangeUsername = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        try {
-            const response = await axiosInstance.patch('/members/username', { newUsername });
-            setCurrentUser(response.data);
-            setNewUsername('');
-            setSuccess('Username changed successfully!');
-        } catch (err) {
-            setError('Failed to change username. It might be taken.');
-            console.error(err);
-        }
-    };
-
-    const handleDeleteAccount = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-        if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        if (newUsername === currentUser.username) {
+            setError('새 사용자 이름이 현재 이름과 동일합니다.');
             return;
         }
         try {
-            await axiosInstance.delete('/members', {
-                data: { password }
-            });
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            delete axiosInstance.defaults.headers.common['Authorization'];
-            window.location.href = '/login'; // Redirect to login after deletion
+            await updateUsername(newUsername);
+            setCurrentUser(prev => ({ ...prev, username: newUsername }));
+            setSuccess('사용자 이름이 성공적으로 변경되었습니다!');
+            setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError('Failed to delete account. Please check your password.');
-            console.error(err);
+            setError(handleApiError(err, logout, navigate));
+        }
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        if (newPassword !== confirmNewPassword) {
+            setError('새 비밀번호가 일치하지 않습니다.');
+            return;
+        }
+        if (newPassword.length < 6) {
+            setError('비밀번호는 6자 이상이어야 합니다.');
+            return;
+        }
+
+        try {
+            await updatePassword(currentPassword, newPassword);
+            setSuccess('비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
+            setTimeout(() => {
+                logout();
+                navigate('/login');
+            }, 2000);
+        } catch (err) {
+            setError(handleApiError(err, logout, navigate));
         }
     };
 
     return (
-        <div className="mypage-container">
-            <h1>My Page</h1>
-            {error && <p className="error-message">{error}</p>}
-            {success && <p className="success-message">{success}</p>}
+        <>
+            <Header />
+            <div className="mypage-container">
+                <h1>마이페이지</h1>
+                {error && <p className="error-message">{error}</p>}
+                {success && <p className="success-message">{success}</p>}
 
             <div className="user-info">
-                <p><strong>Email:</strong> {currentUser.email}</p>
-                <p><strong>Username:</strong> {currentUser.username}</p>
+                <p><strong>이메일:</strong> {currentUser.email}</p>
+                <p><strong>사용자 이름:</strong> {currentUser.username}</p>
             </div>
 
             <div className="form-section">
-                <h2>Change Username</h2>
+                <h2>사용자 이름 변경</h2>
                 <form onSubmit={handleChangeUsername}>
                     <div className="form-group">
-                        <label htmlFor="newUsername">New Username</label>
+                        <label htmlFor="newUsername">새 사용자 이름</label>
                         <input
                             type="text"
                             id="newUsername"
@@ -87,27 +102,48 @@ const Mypage = () => {
                             required
                         />
                     </div>
-                    <button type="submit" className="action-button">Change Username</button>
+                    <button type="submit" className="action-button">이름 변경</button>
                 </form>
             </div>
 
             <div className="form-section">
-                <h2>Delete Account</h2>
-                <form onSubmit={handleDeleteAccount}>
+                <h2>비밀번호 변경</h2>
+                <form onSubmit={handleChangePassword}>
                     <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                        <label htmlFor="currentPassword">현재 비밀번호</label>
                         <input
                             type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            id="currentPassword"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
                             required
                         />
                     </div>
-                    <button type="submit" className="action-button delete-button">Delete Account</button>
+                    <div className="form-group">
+                        <label htmlFor="newPassword">새 비밀번호</label>
+                        <input
+                            type="password"
+                            id="newPassword"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="confirmNewPassword">새 비밀번호 확인</label>
+                        <input
+                            type="password"
+                            id="confirmNewPassword"
+                            value={confirmNewPassword}
+                            onChange={(e) => setConfirmNewPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="action-button">비밀번호 변경</button>
                 </form>
             </div>
         </div>
+        </>
     );
 };
 

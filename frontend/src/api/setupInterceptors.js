@@ -32,6 +32,10 @@ const setupInterceptors = (auth) => {
                     // Refresh failed, logout user
                     auth.logout();
                     localStorage.removeItem('refreshToken');
+                    
+                    // 토큰 만료 안내 메시지 표시
+                    alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
+                    
                     window.location.href = '/login';
                     return Promise.reject(refreshError);
                 }
