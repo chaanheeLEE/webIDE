@@ -119,6 +119,20 @@ export const updateProjectPublishStatus = async (projectId, publishData) => {
 };
 
 /**
+ * 프로젝트 상세 정보 조회 API
+ * @param {number} projectId - 프로젝트 ID
+ * @returns {Promise<Object>} 프로젝트 상세 정보
+ */
+export const getProjectDetails = async (projectId) => {
+  try {
+    const response = await axiosInstance.get(`/projects/${projectId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
  * 프로젝트 삭제 API
  * @param {number} projectId - 삭제할 프로젝트 ID
  * @returns {Promise<void>}

@@ -5,7 +5,8 @@ export const SUPPORTED_LANGUAGES = {
     label: "C++",
     loader: () => import('@codemirror/lang-cpp').then(m => m.cpp()),
     fileExtensions: ['.cpp', '.cc', '.cxx'],
-    isRunnable: true
+    isRunnable: true,
+    version: "10.2.0" // GCC
   },
   css: {
     label: "CSS",
@@ -23,13 +24,15 @@ export const SUPPORTED_LANGUAGES = {
     label: "Java",
     loader: () => import('@codemirror/lang-java').then(m => m.java()),
     fileExtensions: ['.java'],
-    isRunnable: true
+    isRunnable: true,
+    version: "15.0.2" // OpenJDK
   },
   javascript: {
     label: "JavaScript",
     loader: () => import('@codemirror/lang-javascript').then(m => m.javascript({ jsx: true })),
     fileExtensions: ['.js', '.jsx', '.mjs'],
-    isRunnable: true
+    isRunnable: true,
+    version: "18.15.0" // Node.js
   },
   json: {
     label: "JSON",
@@ -47,7 +50,8 @@ export const SUPPORTED_LANGUAGES = {
     label: "Python",
     loader: () => import('@codemirror/lang-python').then(m => m.python()),
     fileExtensions: ['.py', '.pyw'],
-    isRunnable: true
+    isRunnable: true,
+    version: "3.10.0"
   },
   sql: {
     label: "SQL",
