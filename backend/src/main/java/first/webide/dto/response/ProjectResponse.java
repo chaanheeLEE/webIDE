@@ -14,6 +14,7 @@ public class ProjectResponse {
     private Long id;
     private String name;
     private String description;
+    private Boolean isPublic;
     private Long memberId;
     private Long rootDirId;
     private LocalDateTime createdAt;
@@ -24,6 +25,7 @@ public class ProjectResponse {
                 .id(project.getId())
                 .name(project.getName())
                 .description(project.getDescription())
+                .isPublic(project.isPublic())
                 .memberId(project.getMemberId())
                 .rootDirId(project.getRootDirId())
                 .createdAt(project.getCreatedAt())
