@@ -35,3 +35,16 @@ export const updatePassword = async (oldPassword, newPassword) => {
         throw error.response || error;
     }
 };
+
+// 회원탈퇴
+export const deleteMember = async (password) => {
+    try {
+        const response = await axiosInstance.delete('/members/me', {
+            data: { password }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting member:', error);
+        throw error.response || error;
+    }
+};

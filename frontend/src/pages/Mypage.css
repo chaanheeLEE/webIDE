@@ -73,12 +73,11 @@
     background-color: #0056b3;
 }
 
-.delete-button {
-    background-color: #dc3545;
-}
+/* 회원탈퇴 버튼을 위한 인라인 스타일 사용 - CSS 충돌 방지 */
 
 .delete-button:hover {
-    background-color: #c82333;
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
 }
 
 .error-message {
@@ -100,3 +99,25 @@
     border: 1px solid #c3e6cb;
     border-radius: 4px;
 }
+
+.danger-zone {
+    border-color: #dc3545 !important;
+    background-color: #f8f9fa;
+}
+
+.danger-zone h2 {
+    border-bottom-color: #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+.warning-text {
+    color: #721c24;
+    background-color: #f8d7da;
+    padding: 1rem;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+/* 인라인 스타일을 사용하므로 CSS 클래스는 제거 */

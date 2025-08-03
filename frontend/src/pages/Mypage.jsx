@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMemberInfo, updateUsername, updatePassword } from '../api/memberApi';
+import { getMemberInfo, updateUsername, updatePassword, deleteMember } from '../api/memberApi';
 import { useAuth } from '../context/AuthContext';
 import { handleApiError } from '../utils/errorHandler';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,8 @@ const Mypage = () => {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [deletePassword, setDeletePassword] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -71,6 +73,31 @@ const Mypage = () => {
                 logout();
                 navigate('/login');
             }, 2000);
+        } catch (err) {
+            setError(handleApiError(err, logout, navigate));
+        }
+    };
+
+    const handleDeleteAccount = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        if (!deletePassword) {
+            setError('비밀번호를 입력해주세요.');
+            return;
+        }
+
+        const confirmDelete = window.confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+            await deleteMember(deletePassword);
+            alert('계정이 성공적으로 삭제되었습니다.');
+            logout();
+            navigate('/');
         } catch (err) {
             setError(handleApiError(err, logout, navigate));
         }
@@ -140,6 +167,45 @@ const Mypage = () => {
                         />
                     </div>
                     <button type="submit" className="action-button">비밀번호 변경</button>
+                </form>
+            </div>
+
+            <div className="form-section danger-zone">
+                <h2>회원탈퇴</h2>
+                <p className="warning-text">
+                    계정을 삭제하면 모든 프로젝트와 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </p>
+                <form onSubmit={handleDeleteAccount}>
+                    <div className="form-group">
+                        <label htmlFor="deletePassword">비밀번호 확인</label>
+                        <input
+                            type="password"
+                            id="deletePassword"
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                            placeholder="계정 삭제를 위해 비밀번호를 입력하세요"
+                            required
+                        />
+                    </div>
+                    <button 
+                        type="submit" 
+                        style={{
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: '1px solid #dc3545',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '4px',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px'
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#c82333'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#dc3545'}
+                    >
+                        계정 삭제
+                    </button>
                 </form>
             </div>
         </div>
