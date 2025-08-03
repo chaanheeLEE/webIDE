@@ -62,6 +62,17 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ProjectResponse getProjectDetails(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        
+        Member owner = memberRepository.findById(project.getMemberId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        
+        return ProjectResponse.from(project, owner.getEmail());
+    }
+
     @Transactional
     @Override
     public ProjectResponse updateProjectInfo(String memberEmail, Long projectId, UpdateProjectRequest request){
@@ -127,6 +138,26 @@ public class ProjectServiceImpl implements ProjectService {
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         Project project = getProjectAndCheckOwnership(member.getId(), projectId);
+        
+        if (project.getRootDirId() == null) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
+        
+        FileNode rootDir = fileRepository.findById(project.getRootDirId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        
+        return FileNodeResponse.from(rootDir);
+    }
+
+    @Override
+    public FileNodeResponse getPublicProjectRootDirectory(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        
+        // 공개 프로젝트인지 확인
+        if (!project.isPublic()) {
+            throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
         
         if (project.getRootDirId() == null) {
             throw new BusinessException(ErrorCode.FILE_NOT_FOUND);

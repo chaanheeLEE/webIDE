@@ -16,6 +16,7 @@ public interface ProjectService {
 
     ProjectResponse createProject(String memberEmail, CreateProjectRequest request);
     List<ProjectResponse> getProjectsByMemberEmail(String memberEmail);
+    ProjectResponse getProjectDetails(Long projectId);
 
     @Transactional
     ProjectResponse updateProjectInfo(String memberEmail, Long projectId, UpdateProjectRequest request);
@@ -24,6 +25,9 @@ public interface ProjectService {
     ProjectResponse updateProjectPublish(String memberEmail, Long projectId, UpdateProjectPublishRequest request);
     Page<ProjectHubResponse> getPublicProjects(Pageable pageable);
     
-    // 프로젝트 루트 디렉토리 조회
+    // 프로젝트 루트 디렉토리 조회 (소유권 검사)
     FileNodeResponse getProjectRootDirectory(String memberEmail, Long projectId);
+    
+    // 공개 프로젝트 루트 디렉토리 조회 (소유권 검사 없음)
+    FileNodeResponse getPublicProjectRootDirectory(Long projectId);
 }

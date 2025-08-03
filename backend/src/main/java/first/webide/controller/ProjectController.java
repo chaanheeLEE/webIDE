@@ -75,6 +75,17 @@ public class ProjectController {
         return ResponseEntity.ok(publicProjects);
     }
 
+    @Operation(summary = "프로젝트 상세 정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프로젝트 정보 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음")
+    })
+    @GetMapping("/{projectId}")
+    public ResponseEntity<ProjectResponse> getProjectDetails(@PathVariable Long projectId) {
+        ProjectResponse project = projectService.getProjectDetails(projectId);
+        return ResponseEntity.ok(project);
+    }
+
     /**
      * Update
      */
@@ -148,6 +159,18 @@ public class ProjectController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         String memberEmail = userDetails.getMember().getEmail();
         FileNodeResponse rootDir = projectService.getProjectRootDirectory(memberEmail, projectId);
+        return ResponseEntity.ok(rootDir);
+    }
+
+    @Operation(summary = "공개 프로젝트 루트 디렉토리 조회 (인증 불필요)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "루트 디렉토리 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음"),
+            @ApiResponse(responseCode = "403", description = "비공개 프로젝트")
+    })
+    @GetMapping("/{projectId}/files/root/public")
+    public ResponseEntity<FileNodeResponse> getPublicProjectRootDirectory(@PathVariable Long projectId) {
+        FileNodeResponse rootDir = projectService.getPublicProjectRootDirectory(projectId);
         return ResponseEntity.ok(rootDir);
     }
 }
