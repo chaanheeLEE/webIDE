@@ -7,14 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -24,12 +21,18 @@ public class JwtTokenProvider {
 
     private final Key key;
     private final long expirationMilliseconds;
+    private final long refreshExpirationMilliseconds;
+    private final UserDetailsService userDetailsService;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            @Value("${jwt.expiration-ms}") long expirationMilliseconds) {
+                            @Value("${jwt.expiration-ms}") long expirationMilliseconds,
+                            @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMilliseconds,
+                            UserDetailsService userDetailsService) {
         byte[] keyBytes = secretKey.getBytes();
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.expirationMilliseconds = expirationMilliseconds;
+        this.refreshExpirationMilliseconds = refreshExpirationMilliseconds;
+        this.userDetailsService = userDetailsService;
     }
 
     // 토큰 생성
@@ -50,21 +53,32 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // 리프레쉬토큰 expirationMilliseconds을 길게 주어 (하루 ) 생성하기
+    public String generateRefreshToken(Authentication authentication) {
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+        long now = (new Date()).getTime();
+        Date validity = new Date(now + this.refreshExpirationMilliseconds); // 더 긴 만료시간
+        return Jwts.builder()
+                .setSubject(authentication.getName())
+                .claim("auth", authorities)
+                .setIssuedAt(new Date())
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     // 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
-                .parseClaimsJws(token) // jwt 파싱하여 객체 획득
+                .parseClaimsJws(token)
                 .getBody();
 
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 
     // 토큰 유효성 검증

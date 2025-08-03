@@ -1,76 +1,89 @@
 // languages.js
-import { cpp } from "@codemirror/lang-cpp";
-import { css } from "@codemirror/lang-css";
-import { html } from "@codemirror/lang-html";
-import { java } from "@codemirror/lang-java";
-import { javascript } from "@codemirror/lang-javascript";
-import { json } from "@codemirror/lang-json";
-import { markdown } from "@codemirror/lang-markdown";
-import { python } from "@codemirror/lang-python";
-import { sql } from "@codemirror/lang-sql";
-import { yaml } from "@codemirror/lang-yaml";
 
 export const SUPPORTED_LANGUAGES = {
-  cpp: { 
-    label: "C++", 
-    ext: cpp,
+  cpp: {
+    label: "C++",
+    loader: () => import('@codemirror/lang-cpp').then(m => m.cpp()),
     fileExtensions: ['.cpp', '.cc', '.cxx'],
-    isRunnable: true
+    isRunnable: true,
+    version: "10.2.0" // GCC
   },
-  css: { 
-    label: "CSS", 
-    ext: css,
+  css: {
+    label: "CSS",
+    loader: () => import('@codemirror/lang-css').then(m => m.css()),
     fileExtensions: ['.css'],
     isRunnable: false
   },
-  html: { 
-    label: "HTML", 
-    ext: html,
+  html: {
+    label: "HTML",
+    loader: () => import('@codemirror/lang-html').then(m => m.html()),
     fileExtensions: ['.html', '.htm'],
     isRunnable: false
   },
-  java: { 
-    label: "Java", 
-    ext: java,
+  java: {
+    label: "Java",
+    loader: () => import('@codemirror/lang-java').then(m => m.java()),
     fileExtensions: ['.java'],
-    isRunnable: true
+    isRunnable: true,
+    version: "15.0.2" // OpenJDK
   },
-  javascript: { 
-    label: "JavaScript", 
-    ext: () => javascript({ jsx: true }),
+  javascript: {
+    label: "JavaScript",
+    loader: () => import('@codemirror/lang-javascript').then(m => m.javascript({ jsx: true })),
     fileExtensions: ['.js', '.jsx', '.mjs'],
-    isRunnable: true
+    isRunnable: true,
+    version: "18.15.0" // Node.js
   },
-  json: { 
-    label: "JSON", 
-    ext: json,
+  json: {
+    label: "JSON",
+    loader: () => import('@codemirror/lang-json').then(m => m.json()),
     fileExtensions: ['.json'],
     isRunnable: false
   },
-  markdown: { 
-    label: "Markdown", 
-    ext: markdown,
+  markdown: {
+    label: "Markdown",
+    loader: () => import('@codemirror/lang-markdown').then(m => m.markdown()),
     fileExtensions: ['.md', '.markdown'],
     isRunnable: false
   },
-  python: { 
-    label: "Python", 
-    ext: python,
+  python: {
+    label: "Python",
+    loader: () => import('@codemirror/lang-python').then(m => m.python()),
     fileExtensions: ['.py', '.pyw'],
-    isRunnable: true
+    isRunnable: true,
+    version: "3.10.0"
   },
-  sql: { 
-    label: "SQL", 
-    ext: sql,
+  sql: {
+    label: "SQL",
+    loader: () => import('@codemirror/lang-sql').then(m => m.sql()),
     fileExtensions: ['.sql'],
     isRunnable: false
   },
-  yaml: { 
-    label: "YAML", 
-    ext: yaml,
+  yaml: {
+    label: "YAML",
+    loader: () => import('@codemirror/lang-yaml').then(m => m.yaml()),
     fileExtensions: ['.yaml', '.yml'],
     isRunnable: false
   }
 };
 
 export const DEFAULT_LANGUAGE = 'javascript';
+
+/**
+ * Finds the language configuration for a given file name based on its extension.
+ * @param {string} fileName - The name of the file.
+ * @returns {object | undefined} The language configuration object or undefined if not found.
+ */
+export const getLanguageForFile = (fileName) => {
+  if (!fileName) return undefined;
+  
+  // Use `slice` to handle file names that might start with a dot (e.g., .env)
+  const extension = "." + fileName.slice(fileName.lastIndexOf('.') + 1);
+
+  // Find the language that has this extension
+  const langKey = Object.keys(SUPPORTED_LANGUAGES).find(key => 
+    SUPPORTED_LANGUAGES[key].fileExtensions.includes(extension)
+  );
+
+  return SUPPORTED_LANGUAGES[langKey];
+};

@@ -25,7 +25,7 @@ const OutputConsole = ({ output }) => {
         <button className="tab-item">Terminal</button>
       </div>
       <div className="console-content">
-        <pre className="output-area">{output || 'Code output will be displayed here.'}</pre>
+        <pre className="output-area">{output || '실행 결과가 여기에 표시됩니다.'}</pre>
         <div className="input-area">
           <span>&gt;</span>
           <input

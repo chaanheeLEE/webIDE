@@ -159,3 +159,50 @@
   border-color: #007acc;
   outline: 1px solid #007acc;
 }
+
+/* Node Actions Container */
+.node-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.tree-node:hover .node-actions {
+  display: flex;
+}
+
+/* Rename Input Styles */
+.rename-input {
+  background-color: #3c3c3c;
+  border: 1px solid #007acc;
+  color: #cccccc;
+  padding: 2px 4px;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 2px;
+}
+
+.rename-input:focus {
+  border-color: #007acc;
+  box-shadow: 0 0 3px rgba(0, 122, 204, 0.5);
+}
+
+/* Rename Button */
+.rename-button {
+  background: none;
+  border: none;
+  color: #cccccc;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  opacity: 0.7;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.rename-button:hover {
+  background-color: #37373d;
+  opacity: 1;
+}

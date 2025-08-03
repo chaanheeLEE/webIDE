@@ -1,100 +1,137 @@
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
-  padding: 0 20px;
-  height: 50px;
-  border-bottom: 1px solid #333;
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    height: 60px;
+    border-bottom: 1px solid #dee2e6;
 }
 
-.header-left, .header-right {
-  display: flex;
-  align-items: center;
-  flex: 1;
+/* Styles for the main dashboard header */
+.main-header {
+    background-color: white;
+    color: #212529;
 }
 
-.header-right {
-  justify-content: flex-end;
+/* Styles for the IDE header */
+.ide-header {
+    background-color: #202124;
+    color: white;
+    border-bottom: 1px solid #333;
 }
 
-.header-center {
-  flex: 0 1 auto;
-  display: flex;
-  justify-content: center;
+.logo a {
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-right: 30px;
+.main-header .logo a {
+    color: #212529;
 }
 
-.menu {
-  display: flex;
-  gap: 5px;
+.ide-header .logo a {
+    color: white;
 }
 
-.menu-item {
-  background: none;
-  border: none;
-  color: #d4d4d4;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.menu-item:hover {
-  background-color: #3a3a3a;
+.navigation a {
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.main-header .navigation a {
+    color: #495057;
+}
+
+.main-header .navigation a:hover {
+    background-color: #f1f3f5;
+}
+
+.ide-header .navigation a {
+    color: #ccc;
+}
+
+.ide-header .navigation a:hover {
+    color: white;
+    background-color: #3c4043;
+}
+
+.login-button, .signup-button, .logout-button {
+    border: 1px solid;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.login-button {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.signup-button {
+    background-color: transparent;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.logout-button {
+    background: none;
+    margin-left: 0.5rem;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.ide-header .logout-button {
+    color: #ff4d4d;
+    border-color: #ff4d4d;
+}
+
+/* IDE Header specific styles */
+.ide-header {
+    background-color: #252526;
+    color: #cccccc;
+}
+
+.ide-controls {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .run-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #3a813a;
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.1s;
 }
 
-.run-button:hover:not(:disabled) {
-  background-color: #4CAF50;
+.run-button:hover {
+    background-color: #45a049;
+}
+
+.run-button:active {
+    transform: scale(0.98);
 }
 
 .run-button:disabled {
-  background-color: #3a3d41;
-  color: #858585;
-  cursor: not-allowed;
-}
-
-.run-button span {
-  line-height: 1;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.icon-button {
-  background: none;
-  border: none;
-  color: #d4d4d4;
-  cursor: pointer;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-button:hover {
-  color: #fff;
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
 }
