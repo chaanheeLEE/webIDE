@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # 백엔드 서비스 (Spring Boot)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: webide-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/webide
+      - SPRING_DATASOURCE_USERNAME=webide_user
+      - SPRING_DATASOURCE_PASSWORD=webide_password
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - webide-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health", "||", "exit", "1"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+  # 프론트엔드 서비스 (React + Nginx)
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: webide-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - webide-network
+    restart: unless-stopped
+
+  # 데이터베이스 서비스 (MySQL)
+  database:
+    image: mysql:8.0
+    container_name: webide-database
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=webide
+      - MYSQL_USER=webide_user
+      - MYSQL_PASSWORD=webide_password
+    ports:
+      - "3307:3306"  # 포트 충돌 방지를 위해 외부 포트를 3307로 설정
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d  # 초기화 스크립트가 있는 경우
+    networks:
+      - webide-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+# 볼륨 정의
+volumes:
+  mysql_data:
+    driver: local
+
+# 네트워크 정의
+networks:
+  webide-network:
+    driver: bridge

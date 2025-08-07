@@ -1,0 +1,10 @@
+build
+.gradle
+temp
+.idea
+*.iml
+*.iws
+.DS_Store
+.env
+target
+bin
